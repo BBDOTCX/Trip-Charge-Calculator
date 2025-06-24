@@ -536,6 +536,7 @@
                     } finally {
                         revealGraph();
                         updateAndRunSimulation();
+                        hideSpinner(); // FIX: Hide spinner after all operations complete
                     }
                 },
                 (error) => {
@@ -551,16 +552,22 @@
             const preset = APPLIANCE_PRESETS[name];
             if (!preset) return;
 
-            const defaultHours = name.toLowerCase().includes('microwave') ? 0.1 : 1.0;
-            const finalHours = (hours !== null) ? hours : defaultHours;
+            const isFridge = name === 'Compressor Fridge/Freezer';
+            
+            let defaultHours = name.toLowerCase().includes('microwave') ? 0.1 : 1.0;
+            const finalHours = isFridge ? 0 : (hours !== null ? hours : defaultHours);
             const finalWatts = (watts !== null) ? watts : preset.watts;
+
+            const readonlyAttribute = isFridge ? 'readonly' : '';
+            const dynamicAttribute = isFridge ? 'data-dynamic-hours="fridge"' : '';
+            const fridgeStyling = isFridge ? 'bg-gray-200 dark:bg-gray-800 cursor-not-allowed' : 'bg-white dark:bg-gray-600';
 
             const div = document.createElement('div');
             div.className = 'appliance-item grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-md';
             div.innerHTML = `
                 <span class="font-medium truncate" title="${name}">${name}</span>
-                <input type="number" value="${finalWatts}" class="appliance-watts w-20 text-center bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1">
-                <input type="number" step="0.25" value="${finalHours}" class="appliance-hours w-20 text-center bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1" min="0" max="24">
+                <input type="number" value="${finalWatts}" class="appliance-watts w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 bg-white dark:bg-gray-600">
+                <input type="number" step="0.25" value="${parseFloat(finalHours).toFixed(2)}" class="appliance-hours w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 ${fridgeStyling}" min="0" max="24" ${dynamicAttribute} ${readonlyAttribute}>
                 <button title="Delete" class="delete-appliance p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -580,6 +587,33 @@
         }
         
         async function runSimulation() {
+            // Gather preliminary inputs to pass to weather API
+             let prelimInputs = {
+                date: elements.forecastDate.value,
+                lat: currentLocation.lat,
+                lon: currentLocation.lon,
+             };
+
+            const weatherData = await getWeatherData(prelimInputs.lat, prelimInputs.lon, prelimInputs.date);
+            if (!weatherData || !weatherData.hourly || !weatherData.hourly.time) {
+                elements.resultsSpinner.classList.add('hidden');
+                showModal("Weather Error", "Failed to get valid weather data. The forecast may be inaccurate.");
+                return;
+            }
+
+            // NEW: Calculate and update fridge runtime BEFORE gathering final inputs
+            const fridgeHoursInput = document.querySelector('.appliance-hours[data-dynamic-hours="fridge"]');
+            if (fridgeHoursInput && weatherData.daily) {
+                const dateIndex = weatherData.daily.time.findIndex(d => d === prelimInputs.date);
+                if (dateIndex !== -1) {
+                    const minTemp = weatherData.daily.temperature_2m_min[dateIndex];
+                    const maxTemp = weatherData.daily.temperature_2m_max[dateIndex];
+                    const estimatedFridgeHours = estimateFridgeRunTime(minTemp, maxTemp);
+                    fridgeHoursInput.value = estimatedFridgeHours.toFixed(2);
+                }
+            }
+
+            // Now gather all inputs, which will include the updated fridge hours.
             const inputs = {
                 batteryCapacityAh: parseFloat(elements.batteryCapacity.value),
                 usableCapacity: elements.batteryType.value === 'lithium' ? 0.9 : 0.5,
@@ -602,12 +636,6 @@
                 return;
             }
 
-            const weatherData = await getWeatherData(inputs.lat, inputs.lon, inputs.date, inputs.date);
-            if (!weatherData || !weatherData.hourly || !weatherData.hourly.time) {
-                elements.resultsSpinner.classList.add('hidden');
-                showModal("Weather Error", "Failed to get valid weather data. The forecast may be inaccurate.");
-                return;
-            }
 
             const sunTimes = calculateSunTimes(new Date(inputs.date + 'T12:00:00'), inputs.lat, inputs.lon);
             const totalBatteryWh = inputs.batteryCapacityAh * inputs.systemVoltage;
@@ -692,9 +720,9 @@
 
 
         // --- API & CALCULATION HELPERS ---
-        async function getWeatherData(lat, lon, startDate, endDate) {
+        async function getWeatherData(lat, lon, date) {
             const dailyParams = "weather_code,temperature_2m_max,temperature_2m_min";
-            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=weather_code&daily=${dailyParams}&timezone=auto&forecast_days=2`;
+            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=weather_code&daily=${dailyParams}&timezone=auto&start_date=${date}&end_date=${date}`;
             try {
                 const response = await fetch(apiUrl);
                 if (!response.ok) throw new Error("Weather API request failed");
@@ -726,6 +754,16 @@
             if (!codes || codes.length === 0) return "N/A";
             const counts = codes.reduce((acc, code) => { acc[code] = (acc[code] || 0) + 1; return acc; }, {});
             return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+        }
+
+        function estimateFridgeRunTime(minTemp, maxTemp) {
+            const avgTemp = (minTemp + maxTemp) / 2;
+            const baselineTemp = 22; // Baseline ambient temp in Celsius
+            const baselineHours = 6;  // Baseline run time at 22°C
+            const sensitivityFactor = 0.3; // Additional hours of runtime per degree Celsius above baseline
+
+            let estimatedHours = baselineHours + (avgTemp - baselineTemp) * sensitivityFactor;
+            return Math.max(2, Math.min(20, estimatedHours));
         }
 
         // --- UI UPDATE FUNCTIONS ---
