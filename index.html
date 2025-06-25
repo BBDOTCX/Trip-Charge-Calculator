@@ -39,53 +39,14 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #6b7280; /* bg-gray-500 */
         }
-
-        /* Custom styles for range slider for better cross-browser appearance */
-        input[type="range"]::-webkit-slider-runnable-track {
-            background: #374151; /* bg-gray-700 */
-            height: 4px;
-            border-radius: 2px;
+        
+        /* Custom styles for the new toggles */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #4A90E2;
         }
-        input[type="range"]::-moz-range-track {
-            background: #374151; /* bg-gray-700 */
-            height: 4px;
-            border-radius: 2px;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: #3b82f6; /* bg-blue-500 */
-            cursor: pointer;
-            border-radius: 50%;
-            margin-top: -8px; /* Center thumb on the track */
-        }
-        input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            background: #3b82f6; /* bg-blue-500 */
-            cursor: pointer;
-            border-radius: 50%;
-        }
-
-        /* Loading spinner animation */
-        .loader {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #3498db; /* Blue */
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Utility class to hide elements */
-        .hidden {
-            display: none;
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4A90E2;
         }
     </style>
 </head>
@@ -143,11 +104,21 @@
                 </div>
 
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-bold mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">Your Appliances</h2>
-                    <div class="flex gap-2">
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                        <h2 class="text-xl font-bold">Your Appliances</h2>
+                        <div class="flex items-center space-x-2">
+                             <button id="preset-common" title="Load a common set of essential appliances." class="px-3 py-1 text-sm font-semibold rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Common</button>
+                             <button id="preset-dream" title="Load a luxurious setup with extra comforts." class="px-3 py-1 text-sm font-semibold rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Dream</button>
+                             <button id="preset-extreme" title="Load a high-demand setup for a motorhome." class="px-3 py-1 text-sm font-semibold rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Extreme</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2 mb-4">
                         <select id="applianceSelector" class="block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
                         <button id="addApplianceBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800">Add</button>
+                        <button id="clearAppliancesBtn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800">Clear</button>
                     </div>
+
                     <div class="mt-4 grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center px-2 text-sm font-semibold text-gray-500 dark:text-gray-400">
                         <span>Appliance</span>
                         <span class="text-center w-20">Watts</span>
@@ -297,6 +268,10 @@
             totalDaylight: document.getElementById('totalDaylight'),
             effectiveSunHours: document.getElementById('effectiveSunHours'),
             weatherForecast: document.getElementById('weatherForecast'),
+            presetCommon: document.getElementById('preset-common'),
+            presetDream: document.getElementById('preset-dream'),
+            presetExtreme: document.getElementById('preset-extreme'),
+            clearAppliancesBtn: document.getElementById('clearAppliancesBtn'),
         };
 
         // --- APP STATE ---
@@ -504,6 +479,14 @@
             elements.unitWBtn.addEventListener('click', () => switchUnit('w'));
             elements.unitAhBtn.addEventListener('click', () => switchUnit('ah'));
 
+            elements.clearAppliancesBtn.addEventListener('click', () => {
+                elements.applianceList.innerHTML = '';
+                updateAndRunSimulation();
+            });
+            elements.presetCommon.addEventListener('click', () => loadPreset('common'));
+            elements.presetDream.addEventListener('click', () => loadPreset('dream'));
+            elements.presetExtreme.addEventListener('click', () => loadPreset('extreme'));
+
             elements.modalCloseBtn.addEventListener('click', () => elements.modal.classList.add('hidden'));
         }
 
@@ -596,6 +579,61 @@
             `;
             div.dataset.name = name;
             elements.applianceList.appendChild(div);
+        }
+
+        function loadPreset(presetName) {
+            elements.applianceList.innerHTML = '';
+            let presetAppliances = [];
+
+            if (presetName === 'common') {
+                presetAppliances = [
+                    { name: 'Compressor Fridge/Freezer', hours: 8 },
+                    { name: 'LED Lighting (Internal)', hours: 4 },
+                    { name: 'Water Pump', hours: 0.25 },
+                    { name: 'Roof Vent Fan (e.g., Maxxfan)', hours: 8 },
+                    { name: 'Phone/Tablet Charging (USB)', hours: 2 },
+                    { name: 'Diesel/Gas Heater Fan', hours: 6 }
+                ];
+            } else if (presetName === 'dream') {
+                presetAppliances = [
+                    { name: 'Compressor Fridge/Freezer', hours: 8 },
+                    { name: 'Starlink (Standard)', hours: 16 },
+                    { name: '12V Television', hours: 3 },
+                    { name: 'LED Lighting (Internal)', hours: 5 },
+                    { name: 'Coffee Machine (Pod)', hours: 0.25 },
+                    { name: 'Microwave Oven', hours: 0.25 },
+                    { name: 'Laptop Charging', hours: 4 },
+                    { name: 'Water Pump', hours: 0.5 },
+                    { name: 'Roof Vent Fan (e.g., Maxxfan)', hours: 10 }
+                ];
+            } else if (presetName === 'extreme') {
+                 presetAppliances = [
+                    { name: 'Compressor Fridge/Freezer', hours: 8 },
+                    { name: 'Starlink (Standard)', hours: 12 },
+                    { name: 'Air Conditioner', hours: 5 },
+                    { name: 'Washing Machine (Compact)', hours: 1.5 },
+                    { name: 'Induction Cooktop (Single)', hours: 1 },
+                    { name: 'Microwave Oven', hours: 0.25 },
+                    { name: 'Coffee Machine (Pod)', hours: 0.25 },
+                    { name: 'Air Fryer', hours: 0.5 },
+                    { name: '12V Television', hours: 4 },
+                    { name: 'Laptop Charging', hours: 5 },
+                    { name: 'LED Lighting (Internal)', hours: 6 },
+                    { name: 'Water Pump', hours: 0.75 },
+                    { name: 'Roof Vent Fan (e.g., Maxxfan)', hours: 12 },
+                    { name: 'Diesel/Gas Heater Fan', hours: 8 },
+                    { name: 'Power Tool Battery Charger', hours: 2 }
+                ];
+            }
+            
+            presetAppliances.forEach(app => {
+                const preset = APPLIANCE_PRESETS[app.name];
+                if(preset) {
+                    addApplianceUI(app.name, app.hours, preset.watts);
+                }
+            });
+
+            updateAndRunSimulation();
         }
 
         // --- MAIN SIMULATION LOGIC ---
