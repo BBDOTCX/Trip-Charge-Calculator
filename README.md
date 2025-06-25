@@ -1,7 +1,7 @@
 # Trip Charge Calculator
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/BBDOTCX/Trip-Charge-Calculator/main/assets/screenshot.png" alt="Screenshot of the Trip Charge Calculator interface" width="800"/>
+  <img src="https://raw.githubusercontent.com/BBDOTCX/Trip-Charge-Calculator/main/Assets/IMG_4400.jpeg" alt="Screenshot of the Trip Charge Calculator interface" width="800"/>
 </div>
 
 <p align="center">
