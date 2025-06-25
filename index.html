@@ -1,4 +1,4 @@
-l<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -299,7 +299,7 @@ l<!DOCTYPE html>
         let hourlyConsumptionBreakdown = [];
 
         // Pre-defined constants for appliances and weather
-        const APPLIANCE_PRESETS = { 'Compressor Fridge/Freezer': { watts: 50, pattern: 'fridge_intermittent' }, 'Water Pump': { watts: 60, pattern: 'intermittent' }, 'LED Lighting (Internal)': { watts: 10, pattern: 'evening' }, 'Phone/Tablet Charging (USB)': { watts: 15, pattern: 'intermittent' }, '12V Television': { watts: 30, pattern: 'evening' }, 'Roof Vent Fan (e.g., Maxxfan)': { watts: 20, pattern: 'night' }, 'Rangehood/Extractor Fan': { watts: 15, pattern: 'meal-times' }, 'Diesel/Gas Heater Fan': { watts: 20, pattern: 'night' }, 'Stereo/Radio': { watts: 15, pattern: 'daytime' }, 'Awning/Exterior LED Lights': { watts: 10, pattern: 'evening' }, 'BMS & Monitors': { watts: 2, pattern: 'all-day' }, 'Gas Detector / Smoke Alarm': { watts: 1, pattern: 'all-day' }, 'Laptop Charging': { watts: 65, pattern: 'daytime' }, 'Starlink (Standard)': { watts: 55, pattern: 'all-day' }, 'Starlink Mini': { watts: 30, pattern: 'all-day' }, 'Cel-Fi Go Booster': { watts: 15, pattern: 'all-day' }, 'Air Conditioner': { watts: 1600, pattern: 'daytime' }, 'Microwave Oven': { watts: 1150, pattern: 'meal-times' }, 'Coffee Machine (Pod)': { watts: 1250, pattern: 'meal-times' }, 'Electric Kettle (240V)': { watts: 2000, pattern: 'meal-times' }, 'Induction Cooktop (Single)': { watts: 1900, pattern: 'meal-times' }, 'Air Fryer': { watts: 1500, pattern: 'meal-times' }, 'Washing Machine (Compact)': { watts: 250, pattern: 'daytime' }, 'Toaster': { watts: 800, pattern: 'meal-times' }, 'Hair Dryer': { watts: 1600, pattern: 'daytime' }, 'CPAP Machine': { watts: 50, pattern: 'night' }, 'Thermomix/Blender (Peak)': { watts: 1500, pattern: 'meal-times' }, 'Air Compressor (Tyres)': { watts: 700, pattern: 'intermittent' }, '12V Travel Oven': { watts: 120, pattern: 'daytime' }, 'Vacuum Cleaner (Charging)': { watts: 25, pattern: 'intermittent' }, 'Electric Blanket (12V)': { watts: 50, pattern: 'night' }, 'Security Camera (12V)': { watts: 5, pattern: 'all-day' }, 'Power Tool Battery Charger': { watts: 150, pattern: 'daytime' }, 'Water Purifier (UV)': { watts: 8, pattern: 'intermittent' }, 'Electric Awning Motor': { watts: 30, pattern: 'intermittent' }, 'Electric Toilet': { watts: 5, pattern: 'intermittent' } };
+        const APPLIANCE_PRESETS = { 'Compressor Fridge/Freezer': { watts: 50, pattern: 'fridge_intermittent' }, 'Water Pump': { watts: 60, pattern: 'broad_day' }, 'LED Lighting (Internal)': { watts: 10, pattern: 'evening_focused' }, 'Phone/Tablet Charging (USB)': { watts: 15, pattern: 'broad_day' }, '12V Television': { watts: 30, pattern: 'evening_focused' }, 'Roof Vent Fan (e.g., Maxxfan)': { watts: 20, pattern: 'broad_day' }, 'Rangehood/Extractor Fan': { watts: 15, pattern: 'meal_times_short' }, 'Diesel/Gas Heater Fan': { watts: 20, pattern: 'night_focused' }, 'Stereo/Radio': { watts: 15, pattern: 'evening_focused' }, 'Awning/Exterior LED Lights': { watts: 10, pattern: 'evening_focused' }, 'BMS & Monitors': { watts: 2, pattern: 'all_day_constant' }, 'Gas Detector / Smoke Alarm': { watts: 1, pattern: 'all_day_constant' }, 'Laptop Charging': { watts: 65, pattern: 'broad_day' }, 'Starlink (Standard)': { watts: 55, pattern: 'starlink_usage' }, 'Starlink Mini': { watts: 30, pattern: 'starlink_usage' }, 'Cel-Fi Go Booster': { watts: 15, pattern: 'all_day_constant' }, 'Air Conditioner': { watts: 1600, pattern: 'daytime_peak_solar' }, 'Microwave Oven': { watts: 1150, pattern: 'meal_times_short' }, 'Coffee Machine (Pod)': { watts: 1250, pattern: 'meal_times_short' }, 'Electric Kettle (240V)': { watts: 2000, pattern: 'meal_times_short' }, 'Induction Cooktop (Single)': { watts: 1900, pattern: 'meal_times_short' }, 'Air Fryer': { watts: 1500, pattern: 'meal_times_short' }, 'Washing Machine (Compact)': { watts: 250, pattern: 'daytime_peak_solar' }, 'Toaster': { watts: 800, pattern: 'meal_times_short' }, 'Hair Dryer': { watts: 1600, pattern: 'morning_routine' }, 'CPAP Machine': { watts: 50, pattern: 'night_focused' }, 'Thermomix/Blender (Peak)': { watts: 1500, pattern: 'meal_times_short' }, 'Air Compressor (Tyres)': { watts: 700, pattern: 'broad_day' }, '12V Travel Oven': { watts: 120, pattern: 'daytime_peak_solar' }, 'Vacuum Cleaner (Charging)': { watts: 25, pattern: 'broad_day' }, 'Electric Blanket (12V)': { watts: 50, pattern: 'night_focused' }, 'Security Camera (12V)': { watts: 5, pattern: 'all_day_constant' }, 'Power Tool Battery Charger': { watts: 150, pattern: 'daytime_peak_solar' }, 'Water Purifier (UV)': { watts: 8, pattern: 'broad_day' }, 'Electric Awning Motor': { watts: 30, pattern: 'broad_day' }, 'Electric Toilet': { watts: 5, pattern: 'broad_day' } };
         const WEATHER_CODES = { 0: { name: "Clear sky", modifier: 1.0, icon: 'sun' }, 1: { name: "Mainly clear", modifier: 0.95, icon: 'sun' }, 2: { name: "Partly cloudy", modifier: 0.85, icon: 'cloud-sun' }, 3: { name: "Overcast", modifier: 0.6, icon: 'cloud' }, 45: { name: "Fog", modifier: 0.4, icon: 'fog' }, 48: { name: "Depositing rime fog", modifier: 0.35, icon: 'fog' }, 51: { name: "Light drizzle", modifier: 0.5, icon: 'drizzle' }, 53: { name: "Moderate drizzle", modifier: 0.45, icon: 'drizzle' }, 55: { name: "Dense drizzle", modifier: 0.4, icon: 'drizzle' }, 61: { name: "Slight rain", modifier: 0.4, icon: 'rain' }, 63: { name: "Moderate rain", modifier: 0.3, icon: 'rain' }, 65: { name: "Heavy rain", modifier: 0.2, icon: 'rain-heavy' }, 80: { name: "Slight rain showers", modifier: 0.35, icon: 'rain' }, 81: { name: "Moderate rain showers", modifier: 0.25, icon: 'rain-heavy' }, 82: { name: "Violent rain showers", modifier: 0.15, icon: 'rain-heavy' }, };
         const WEATHER_ICONS = { sun: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`, 'cloud-sun': `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path><path d="M12 2v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="M20 12h2"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M12 22v-2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="M4 12H2"></path><path d="m6.34 6.34-1.41-1.41"></path></svg>`, cloud: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>`, fog: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5A2.5 2.5 0 0 1 6.5 9H10v0c.55 0 .55 0 .55 0A2.5 2.5 0 0 1 13 6.5V6c0-.83.67-1.5 1.5-1.5S16 5.17 16 6v.5A2.5 2.5 0 0 1 18.5 9H20a2 2 0 0 1 2 2v2.5"></path><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20a2 2 0 0 1 2 2v.5"></path><line x1="4" x2="22" y1="14" y2="14"></line></svg>`, drizzle: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19v1"></path><path d="M8 14v1"></path><path d="M16 19v1"></path><path d="M16 14v1"></path><path d="M12 21v1"></path><path d="M12 16v1"></path><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path></svg>`, rain: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 13v8"></path><path d="M8 13v8"></path><path d="M12 15v8"></path><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path></svg>`, 'rain-heavy': `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M16 14v6"></path><path d="M8 14v6"></path><path d="M12 16v6"></path></svg>`, };
 
@@ -691,26 +691,28 @@ l<!DOCTYPE html>
 
                 const getHoursForPattern = (pattern) => {
                     switch(pattern) {
-                        case 'daytime': return Array.from({length: 11}, (_, i) => i + 7);
-                        case 'evening': return [18, 19, 20, 21, 22, 23];
-                        case 'night': return [0, 1, 2, 3, 4, 5, 6, 22, 23];
-                        case 'all-day': return Array.from({length: 24}, (_, i) => i);
-                        case 'meal-times': return [7, 8, 12, 13, 18, 19];
-                        case 'intermittent': default: return [7, 8, 12, 13, 17, 18, 19, 20];
+                        case 'starlink_usage':       return Array.from({length: 17}, (_, i) => i + 7); // 7am to 11pm
+                        case 'daytime_peak_solar':   return [11, 12, 13, 14, 15, 16];
+                        case 'evening_focused':      return [18, 19, 20, 21, 22];
+                        case 'night_focused':        return [0, 1, 2, 3, 4, 5, 22, 23];
+                        case 'broad_day':            return Array.from({length: 13}, (_, i) => i + 8); // 8am to 8pm
+                        case 'meal_times_short':     return [8, 12, 18];
+                        case 'morning_routine':      return [7, 8, 9];
+                        case 'all_day_constant':
+                        default:                     return Array.from({length: 24}, (_, i) => i);
                     }
                 };
                 
                 const usageHours = getHoursForPattern(appliance.pattern);
-                let hoursToDistribute = Math.ceil(hoursLeft);
+                let hoursToDistribute = appliance.hours;
+                if (usageHours.length === 0) return;
 
-                for(let i = 0; i < hoursToDistribute; i++){
-                    const hourIndex = usageHours[i % usageHours.length];
-                    const consumptionForHour = (hoursLeft > 1) ? appliance.watts : appliance.watts * hoursLeft;
-                    hourlyConsumption[hourIndex] += consumptionForHour;
-                    hourlyConsumptionBreakdown[hourIndex].push({ name: appliance.name, watts: consumptionForHour });
-                    hoursLeft -= 1;
-                    if(hoursLeft <= 0) break;
-                }
+                const consumptionPerSlot = (appliance.watts * hoursToDistribute) / usageHours.length;
+
+                usageHours.forEach(hourIndex => {
+                    hourlyConsumption[hourIndex] += consumptionPerSlot;
+                    hourlyConsumptionBreakdown[hourIndex].push({ name: appliance.name, watts: consumptionPerSlot });
+                });
             });
         }
 
@@ -718,7 +720,6 @@ l<!DOCTYPE html>
         // --- API & CALCULATION HELPERS ---
         async function getWeatherData(lat, lon) {
             const dailyParams = "weather_code,temperature_2m_max,temperature_2m_min";
-            // FIX: Removed start and end dates to get a standard multi-day forecast
             const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=weather_code&daily=${dailyParams}&timezone=auto&forecast_days=2`;
             try {
                 const response = await fetch(apiUrl);
@@ -767,7 +768,7 @@ l<!DOCTYPE html>
         function generateAdvancedSuggestions(appliances, batterySOC, sunTimes) {
             const suggestions = [];
             const highPowerAppliances = appliances.filter(a => a.watts > 1000);
-            const nightAppliances = appliances.filter(a => a.pattern === 'night' || a.pattern === 'all-day' || a.pattern === 'fridge_intermittent');
+            const nightAppliances = appliances.filter(a => a.pattern === 'night_focused' || a.pattern === 'all_day_constant' || a.pattern === 'fridge_intermittent');
             const has = (namePart) => appliances.some(a => a.name.toLowerCase().includes(namePart.toLowerCase()));
 
             if (highPowerAppliances.length > 1) {
@@ -783,7 +784,7 @@ l<!DOCTYPE html>
             const nightDuration = (24 - sunsetHour) + sunriseHour;
             const nightConsumption = nightAppliances.reduce((total, app) => {
                 let nightRatio = 1;
-                if (app.pattern === 'all-day' || app.pattern === 'fridge_intermittent') {
+                if (app.pattern === 'all_day_constant' || app.pattern === 'fridge_intermittent') {
                     nightRatio = nightDuration / 24;
                 }
                 return total + (app.watts * app.hours * nightRatio);
@@ -820,17 +821,25 @@ l<!DOCTYPE html>
             elements.solarGeneration.textContent = `${Math.round(totalSolar).toLocaleString()} Wh`;
             
             const firstEmptyHour = batterySOC.findIndex(soc => soc < 1);
-            if (firstEmptyHour === -1) {
-                if(totalSolar > totalDraw){
-                   elements.estimatedRuntime.textContent = "Sustainable";
-                   elements.estimatedRuntime.className = "text-2xl font-bold text-green-900 dark:text-green-200";
-                } else {
-                   elements.estimatedRuntime.textContent = "Deficit";
-                   elements.estimatedRuntime.className = "text-2xl font-bold text-yellow-600 dark:text-yellow-400";
-                }
-            } else {
+            
+            if (firstEmptyHour !== -1) {
                 elements.estimatedRuntime.textContent = `~${firstEmptyHour} hours`;
                 elements.estimatedRuntime.className = "text-2xl font-bold text-red-900 dark:text-red-200";
+            } else if (totalSolar < totalDraw) {
+                const deficit = totalDraw - totalSolar;
+                const runtimeInHours = (usableBatteryWh / deficit) * 24;
+                
+                if (runtimeInHours > 48) {
+                    const runtimeInDays = runtimeInHours / 24;
+                    elements.estimatedRuntime.textContent = `~${runtimeInDays.toFixed(1)} days`;
+                } else {
+                    elements.estimatedRuntime.textContent = `~${Math.floor(runtimeInHours)} hours`;
+                }
+                
+                elements.estimatedRuntime.className = "text-2xl font-bold text-yellow-600 dark:text-yellow-400";
+            } else {
+                elements.estimatedRuntime.textContent = "Sustainable";
+                elements.estimatedRuntime.className = "text-2xl font-bold text-green-900 dark:text-green-200";
             }
 
             const daylightHours = (sunTimes.sunset - sunTimes.sunrise) / 3600000;
@@ -839,7 +848,6 @@ l<!DOCTYPE html>
             const effectiveSun = solarPanelWatts > 0 ? totalSolar / solarPanelWatts : 0;
             elements.effectiveSunHours.textContent = `${effectiveSun.toFixed(1)} hours`;
             
-            // FIX: Use the daily weather code for consistency
             const dominantWeatherCode = weatherData.daily.weather_code[0];
             elements.weatherForecast.textContent = WEATHER_CODES[dominantWeatherCode]?.name ?? "Varied";
             
