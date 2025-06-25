@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+l<!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -536,7 +536,7 @@
                     } finally {
                         revealGraph();
                         updateAndRunSimulation();
-                        hideSpinner(); // FIX: Hide spinner after all operations complete
+                        hideSpinner();
                     }
                 },
                 (error) => {
@@ -587,21 +587,19 @@
         }
         
         async function runSimulation() {
-            // Gather preliminary inputs to pass to weather API
-             let prelimInputs = {
+            let prelimInputs = {
                 date: elements.forecastDate.value,
                 lat: currentLocation.lat,
                 lon: currentLocation.lon,
              };
 
-            const weatherData = await getWeatherData(prelimInputs.lat, prelimInputs.lon, prelimInputs.date);
+            const weatherData = await getWeatherData(prelimInputs.lat, prelimInputs.lon);
             if (!weatherData || !weatherData.hourly || !weatherData.hourly.time) {
                 elements.resultsSpinner.classList.add('hidden');
                 showModal("Weather Error", "Failed to get valid weather data. The forecast may be inaccurate.");
                 return;
             }
 
-            // NEW: Calculate and update fridge runtime BEFORE gathering final inputs
             const fridgeHoursInput = document.querySelector('.appliance-hours[data-dynamic-hours="fridge"]');
             if (fridgeHoursInput && weatherData.daily) {
                 const dateIndex = weatherData.daily.time.findIndex(d => d === prelimInputs.date);
@@ -613,7 +611,6 @@
                 }
             }
 
-            // Now gather all inputs, which will include the updated fridge hours.
             const inputs = {
                 batteryCapacityAh: parseFloat(elements.batteryCapacity.value),
                 usableCapacity: elements.batteryType.value === 'lithium' ? 0.9 : 0.5,
@@ -647,7 +644,6 @@
             const hourlyBatterySOC = new Array(24).fill(0);
             hourlyConsumptionBreakdown = Array.from({ length: 24 }, () => []);
 
-            // Distribute appliance loads
             distributeApplianceLoad(inputs.appliances, hourlyConsumption, hourlyConsumptionBreakdown);
 
             const localDayStart = new Date(inputs.date + 'T00:00:00');
@@ -720,9 +716,10 @@
 
 
         // --- API & CALCULATION HELPERS ---
-        async function getWeatherData(lat, lon, date) {
+        async function getWeatherData(lat, lon) {
             const dailyParams = "weather_code,temperature_2m_max,temperature_2m_min";
-            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=weather_code&daily=${dailyParams}&timezone=auto&start_date=${date}&end_date=${date}`;
+            // FIX: Removed start and end dates to get a standard multi-day forecast
+            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=weather_code&daily=${dailyParams}&timezone=auto&forecast_days=2`;
             try {
                 const response = await fetch(apiUrl);
                 if (!response.ok) throw new Error("Weather API request failed");
@@ -836,18 +833,16 @@
                 elements.estimatedRuntime.className = "text-2xl font-bold text-red-900 dark:text-red-200";
             }
 
-            // Update restored panes
             const daylightHours = (sunTimes.sunset - sunTimes.sunrise) / 3600000;
             elements.totalDaylight.textContent = `${daylightHours.toFixed(1)} hours`;
 
             const effectiveSun = solarPanelWatts > 0 ? totalSolar / solarPanelWatts : 0;
             elements.effectiveSunHours.textContent = `${effectiveSun.toFixed(1)} hours`;
             
-            const todaysWeatherCodes = weatherData.hourly.weather_code.slice(0, 24);
-            const dominantWeatherCode = getDominantWeather(todaysWeatherCodes);
+            // FIX: Use the daily weather code for consistency
+            const dominantWeatherCode = weatherData.daily.weather_code[0];
             elements.weatherForecast.textContent = WEATHER_CODES[dominantWeatherCode]?.name ?? "Varied";
             
-            // --- Suggestion Logic ---
             let primarySuggestion;
             if (firstEmptyHour !== -1) {
                 primarySuggestion = { type: "critical", message: `CRITICAL: Your battery is projected to run out in about ${firstEmptyHour} hours. Reduce load immediately.` };
@@ -875,7 +870,7 @@
                 return;
             }
 
-            const days = weatherData.daily.time.slice(0, 2); // Show today and tomorrow
+            const days = weatherData.daily.time.slice(0, 2);
 
             days.forEach((dateString, index) => {
                 const dayName = index === 0 ? "Today" : "Tomorrow";
@@ -903,7 +898,7 @@
         function updateSuggestionBox(primary, advanced = []) {
             const { type, message } = primary;
             
-            elements.suggestionText.innerHTML = ''; // Clear previous content
+            elements.suggestionText.innerHTML = '';
             
             const primaryMessageEl = document.createElement('p');
             primaryMessageEl.textContent = message;
@@ -926,10 +921,8 @@
                  warning: { box: 'bg-yellow-100 dark:bg-yellow-900/50', text: 'text-yellow-900 dark:text-yellow-200' },
                  critical: { box: 'bg-red-100 dark:bg-red-900/50', text: 'text-red-900 dark:text-red-200' }
              };
-             // The suggestionBox itself already exists, so we just update its contents' classes
              elements.suggestionText.className = `${baseClasses} ${colorMap[type].text}`;
 
-             // Also update the parent box's background color
             const parentBox = elements.suggestionText.closest('#suggestionBox > div').parentElement;
             if (parentBox) {
                  parentBox.className = `mt-4 p-4 rounded-lg ${colorMap[type].box}`;
