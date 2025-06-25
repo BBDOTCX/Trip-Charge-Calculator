@@ -92,8 +92,8 @@
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
     <div class="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
         <header class="mb-8 text-center">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">Advanced Caravan Battery Calculator</h1>
-            <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">A 24-hour power system simulator for your mobile setup.</p>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">Trip Charge Calculator</h1>
+            <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">A solar-system sim for your camping trip, with a couple extra goodies.</p>
         </header>
 
         <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
@@ -164,14 +164,21 @@
             <div class="xl:col-span-3 flex flex-col gap-8">
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md relative">
                      <div id="results-spinner" class="hidden absolute inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-10 rounded-lg"><div class="loader"></div></div>
-                    <h2 class="text-xl font-bold mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">Results & Suggestions</h2>
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                        <h2 class="text-xl font-bold">Results & Suggestions</h2>
+                        <div id="unit-switcher" class="flex items-center space-x-1 bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+                            <button id="unit-wh" class="unit-btn px-3 py-1 text-sm font-semibold rounded-md">Wh</button>
+                            <button id="unit-w" class="unit-btn px-3 py-1 text-sm font-semibold rounded-md">W</button>
+                            <button id="unit-ah" class="unit-btn px-3 py-1 text-sm font-semibold rounded-md">Ah</button>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div class="bg-red-100 dark:bg-red-900/50 p-4 rounded-lg text-center">
-                            <h3 class="text-sm font-medium text-red-800 dark:text-red-300">Daily Power Draw</h3>
+                        <div id="dailyDrawCard" class="bg-red-100 dark:bg-red-900/50 p-4 rounded-lg text-center">
+                            <h3 id="daily-draw-label" class="text-sm font-medium text-red-800 dark:text-red-300">Daily Power Draw</h3>
                             <p id="dailyDraw" class="text-2xl font-bold text-red-900 dark:text-red-200">-</p>
                         </div>
                         <div class="bg-yellow-100 dark:bg-yellow-900/50 p-4 rounded-lg text-center">
-                            <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-300">Est. Solar Generation</h3>
+                            <h3 id="solar-gen-label" class="text-sm font-medium text-yellow-800 dark:text-yellow-300">Est. Solar Generation</h3>
                             <p id="solarGeneration" class="text-2xl font-bold text-yellow-900 dark:text-yellow-200">-</p>
                         </div>
                         <div class="bg-green-100 dark:bg-green-900/50 p-4 rounded-lg text-center">
@@ -267,7 +274,10 @@
             addApplianceBtn: document.getElementById('addApplianceBtn'),
             applianceList: document.getElementById('applianceList'),
             dailyDraw: document.getElementById('dailyDraw'),
+            dailyDrawCard: document.getElementById('dailyDrawCard'),
             solarGeneration: document.getElementById('solarGeneration'),
+            dailyDrawLabel: document.getElementById('daily-draw-label'),
+            solarGenLabel: document.getElementById('solar-gen-label'),
             estimatedRuntime: document.getElementById('estimatedRuntime'),
             forecastGrid: document.getElementById('forecast-grid'),
             suggestionBox: document.getElementById('suggestionBox'),
@@ -281,7 +291,9 @@
             modalTitle: document.getElementById('modalTitle'),
             modalMessage: document.getElementById('modalMessage'),
             modalCloseBtn: document.getElementById('modalCloseBtn'),
-            // Restored elements
+            unitWhBtn: document.getElementById('unit-wh'),
+            unitWBtn: document.getElementById('unit-w'),
+            unitAhBtn: document.getElementById('unit-ah'),
             totalDaylight: document.getElementById('totalDaylight'),
             effectiveSunHours: document.getElementById('effectiveSunHours'),
             weatherForecast: document.getElementById('weatherForecast'),
@@ -297,6 +309,7 @@
         let simulationDebounceTimer;
         let currentLocation = null;
         let hourlyConsumptionBreakdown = [];
+        let currentUnit = 'wh'; // 'wh', 'w', or 'ah'
 
         // Pre-defined constants for appliances and weather
         const APPLIANCE_PRESETS = { 'Compressor Fridge/Freezer': { watts: 50, pattern: 'fridge_intermittent' }, 'Water Pump': { watts: 60, pattern: 'broad_day' }, 'LED Lighting (Internal)': { watts: 10, pattern: 'evening_focused' }, 'Phone/Tablet Charging (USB)': { watts: 15, pattern: 'broad_day' }, '12V Television': { watts: 30, pattern: 'evening_focused' }, 'Roof Vent Fan (e.g., Maxxfan)': { watts: 20, pattern: 'broad_day' }, 'Rangehood/Extractor Fan': { watts: 15, pattern: 'meal_times_short' }, 'Diesel/Gas Heater Fan': { watts: 20, pattern: 'night_focused' }, 'Stereo/Radio': { watts: 15, pattern: 'evening_focused' }, 'Awning/Exterior LED Lights': { watts: 10, pattern: 'evening_focused' }, 'BMS & Monitors': { watts: 2, pattern: 'all_day_constant' }, 'Gas Detector / Smoke Alarm': { watts: 1, pattern: 'all_day_constant' }, 'Laptop Charging': { watts: 65, pattern: 'broad_day' }, 'Starlink (Standard)': { watts: 55, pattern: 'starlink_usage' }, 'Starlink Mini': { watts: 30, pattern: 'starlink_usage' }, 'Cel-Fi Go Booster': { watts: 15, pattern: 'all_day_constant' }, 'Air Conditioner': { watts: 1600, pattern: 'daytime_peak_solar' }, 'Microwave Oven': { watts: 1150, pattern: 'meal_times_short' }, 'Coffee Machine (Pod)': { watts: 1250, pattern: 'meal_times_short' }, 'Electric Kettle (240V)': { watts: 2000, pattern: 'meal_times_short' }, 'Induction Cooktop (Single)': { watts: 1900, pattern: 'meal_times_short' }, 'Air Fryer': { watts: 1500, pattern: 'meal_times_short' }, 'Washing Machine (Compact)': { watts: 250, pattern: 'daytime_peak_solar' }, 'Toaster': { watts: 800, pattern: 'meal_times_short' }, 'Hair Dryer': { watts: 1600, pattern: 'morning_routine' }, 'CPAP Machine': { watts: 50, pattern: 'night_focused' }, 'Thermomix/Blender (Peak)': { watts: 1500, pattern: 'meal_times_short' }, 'Air Compressor (Tyres)': { watts: 700, pattern: 'broad_day' }, '12V Travel Oven': { watts: 120, pattern: 'daytime_peak_solar' }, 'Vacuum Cleaner (Charging)': { watts: 25, pattern: 'broad_day' }, 'Electric Blanket (12V)': { watts: 50, pattern: 'night_focused' }, 'Security Camera (12V)': { watts: 5, pattern: 'all_day_constant' }, 'Power Tool Battery Charger': { watts: 150, pattern: 'daytime_peak_solar' }, 'Water Purifier (UV)': { watts: 8, pattern: 'broad_day' }, 'Electric Awning Motor': { watts: 30, pattern: 'broad_day' }, 'Electric Toilet': { watts: 5, pattern: 'broad_day' } };
@@ -373,6 +386,7 @@
                 solarWattage: elements.solarWattage.value,
                 location: currentLocation,
                 date: elements.forecastDate.value,
+                unit: currentUnit, // Save the selected unit
                 appliances: Array.from(elements.applianceList.children).map(el => ({
                     name: el.dataset.name,
                     watts: el.querySelector('.appliance-watts').value,
@@ -393,6 +407,8 @@
             elements.batteryType.value = data.batteryType || 'lithium';
             elements.solarWattage.value = data.solarWattage || '400';
             elements.forecastDate.value = data.date || new Date().toISOString().split('T')[0];
+            currentUnit = data.unit || 'wh';
+            updateUnitSwitchUI();
             
             if (data.location) {
                 currentLocation = data.location;
@@ -416,6 +432,7 @@
                 solarWattage: '400',
                 location: null,
                 date: localToday.toISOString().split('T')[0],
+                unit: 'wh',
                 appliances: [
                     { name: 'Compressor Fridge/Freezer', hours: '8', watts: APPLIANCE_PRESETS['Compressor Fridge/Freezer'].watts },
                     { name: 'LED Lighting (Internal)', hours: '4', watts: APPLIANCE_PRESETS['LED Lighting (Internal)'].watts },
@@ -482,6 +499,10 @@
                     updateAndRunSimulation();
                 }
             });
+
+            elements.unitWhBtn.addEventListener('click', () => switchUnit('wh'));
+            elements.unitWBtn.addEventListener('click', () => switchUnit('w'));
+            elements.unitAhBtn.addEventListener('click', () => switchUnit('ah'));
 
             elements.modalCloseBtn.addEventListener('click', () => elements.modal.classList.add('hidden'));
         }
@@ -560,6 +581,7 @@
 
             const readonlyAttribute = isFridge ? 'readonly' : '';
             const dynamicAttribute = isFridge ? 'data-dynamic-hours="fridge"' : '';
+            const titleAttribute = isFridge ? 'title="Runtime is automatically calculated based on the ambient temperature forecast."' : '';
             const fridgeStyling = isFridge ? 'bg-gray-200 dark:bg-gray-800 cursor-not-allowed' : 'bg-white dark:bg-gray-600';
 
             const div = document.createElement('div');
@@ -567,7 +589,7 @@
             div.innerHTML = `
                 <span class="font-medium truncate" title="${name}">${name}</span>
                 <input type="number" value="${finalWatts}" class="appliance-watts w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 bg-white dark:bg-gray-600">
-                <input type="number" step="0.25" value="${parseFloat(finalHours).toFixed(2)}" class="appliance-hours w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 ${fridgeStyling}" min="0" max="24" ${dynamicAttribute} ${readonlyAttribute}>
+                <input type="number" step="0.25" value="${parseFloat(finalHours).toFixed(2)}" class="appliance-hours w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 ${fridgeStyling}" min="0" max="24" ${dynamicAttribute} ${readonlyAttribute} ${titleAttribute}>
                 <button title="Delete" class="delete-appliance p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -600,14 +622,16 @@
                 return;
             }
 
-            const fridgeHoursInput = document.querySelector('.appliance-hours[data-dynamic-hours="fridge"]');
-            if (fridgeHoursInput && weatherData.daily) {
+            const fridgeHoursInputs = document.querySelectorAll('.appliance-hours[data-dynamic-hours="fridge"]');
+            if (fridgeHoursInputs.length > 0 && weatherData.daily) {
                 const dateIndex = weatherData.daily.time.findIndex(d => d === prelimInputs.date);
                 if (dateIndex !== -1) {
                     const minTemp = weatherData.daily.temperature_2m_min[dateIndex];
                     const maxTemp = weatherData.daily.temperature_2m_max[dateIndex];
                     const estimatedFridgeHours = estimateFridgeRunTime(minTemp, maxTemp);
-                    fridgeHoursInput.value = estimatedFridgeHours.toFixed(2);
+                    fridgeHoursInputs.forEach(input => {
+                        input.value = estimatedFridgeHours.toFixed(2);
+                    });
                 }
             }
 
@@ -688,6 +712,16 @@
                     }
                     return;
                 }
+                if (appliance.pattern === 'all_day_constant') {
+                    const hoursToRun = Math.round(appliance.hours);
+                     for (let i = 0; i < hoursToRun; i++) {
+                        const hourIndex = i % 24;
+                        hourlyConsumption[hourIndex] += appliance.watts;
+                        hourlyConsumptionBreakdown[hourIndex].push({ name: appliance.name, watts: appliance.watts });
+                    }
+                    return;
+                }
+
 
                 const getHoursForPattern = (pattern) => {
                     switch(pattern) {
@@ -698,16 +732,14 @@
                         case 'broad_day':            return Array.from({length: 13}, (_, i) => i + 8); // 8am to 8pm
                         case 'meal_times_short':     return [8, 12, 18];
                         case 'morning_routine':      return [7, 8, 9];
-                        case 'all_day_constant':
                         default:                     return Array.from({length: 24}, (_, i) => i);
                     }
                 };
                 
                 const usageHours = getHoursForPattern(appliance.pattern);
-                let hoursToDistribute = appliance.hours;
                 if (usageHours.length === 0) return;
-
-                const consumptionPerSlot = (appliance.watts * hoursToDistribute) / usageHours.length;
+                
+                const consumptionPerSlot = (appliance.watts * appliance.hours) / usageHours.length;
 
                 usageHours.forEach(hourIndex => {
                     hourlyConsumption[hourIndex] += consumptionPerSlot;
@@ -755,13 +787,26 @@
         }
 
         function estimateFridgeRunTime(minTemp, maxTemp) {
-            const avgTemp = (minTemp + maxTemp) / 2;
-            const baselineTemp = 22; // Baseline ambient temp in Celsius
-            const baselineHours = 6;  // Baseline run time at 22°C
-            const sensitivityFactor = 0.3; // Additional hours of runtime per degree Celsius above baseline
+            const ambientTemp = (minTemp + maxTemp) / 2;
+            const baselineTemp = 25; // Reference ambient temp in Celsius for baseline consumption
+            const baselineHours = 8; // Baseline run time (duty cycle of ~33%) at 25°C
+            let powerMultiplier;
 
-            let estimatedHours = baselineHours + (avgTemp - baselineTemp) * sensitivityFactor;
-            return Math.max(2, Math.min(20, estimatedHours));
+            if (ambientTemp < baselineTemp) {
+                // For every degree below baseline, reduce power requirement by 4%
+                // Set a minimum power multiplier of 20% to account for base losses
+                const reductionFactor = (baselineTemp - ambientTemp) * 0.04;
+                powerMultiplier = Math.max(0.20, 1 - reductionFactor);
+            } else {
+                // For every degree above baseline, increase power requirement by 4%
+                const increaseFactor = (ambientTemp - baselineTemp) * 0.04;
+                powerMultiplier = 1 + increaseFactor;
+            }
+            
+            const estimatedHours = baselineHours * powerMultiplier;
+
+            // Clamp the final result between a realistic minimum and maximum runtime
+            return Math.max(1.5, Math.min(24, estimatedHours));
         }
 
         // --- UI UPDATE FUNCTIONS ---
@@ -817,8 +862,37 @@
             const totalDraw = consumption.reduce((a, b) => a + b, 0);
             const totalSolar = solar.reduce((a, b) => a + b, 0);
 
-            elements.dailyDraw.textContent = `${Math.round(totalDraw).toLocaleString()} Wh`;
-            elements.solarGeneration.textContent = `${Math.round(totalSolar).toLocaleString()} Wh`;
+            let displayDraw, displaySolar, unitLabel, tooltipText;
+            switch (currentUnit) {
+                case 'w':
+                    displayDraw = totalDraw / 24;
+                    displaySolar = totalSolar / 24;
+                    unitLabel = 'W';
+                    elements.dailyDrawLabel.textContent = "Avg. Power Draw";
+                    elements.solarGenLabel.textContent = "Avg. Solar Power";
+                    tooltipText = "This is the average power needed over 24 hours to meet your total daily energy consumption (Wh). It's not the sum of instantaneous wattages, but rather the total Wh divided by 24.";
+                    elements.dailyDrawCard.setAttribute('title', tooltipText);
+                    break;
+                case 'ah':
+                    displayDraw = totalDraw / 12;
+                    displaySolar = totalSolar / 12;
+                    unitLabel = 'Ah';
+                    elements.dailyDrawLabel.textContent = "Daily Amp Hours";
+                    elements.solarGenLabel.textContent = "Est. Solar Amp Hours";
+                    elements.dailyDrawCard.removeAttribute('title');
+                    break;
+                default: // 'wh'
+                    displayDraw = totalDraw;
+                    displaySolar = totalSolar;
+                    unitLabel = 'Wh';
+                    elements.dailyDrawLabel.textContent = "Daily Power Draw";
+                    elements.solarGenLabel.textContent = "Est. Solar Generation";
+                    elements.dailyDrawCard.removeAttribute('title');
+                    break;
+            }
+
+            elements.dailyDraw.textContent = `${Math.round(displayDraw).toLocaleString()} ${unitLabel}`;
+            elements.solarGeneration.textContent = `${Math.round(displaySolar).toLocaleString()} ${unitLabel}`;
             
             const firstEmptyHour = batterySOC.findIndex(soc => soc < 1);
             
@@ -960,6 +1034,30 @@
             elements.modal.classList.remove('hidden');
         }
 
+        function switchUnit(unit) {
+            currentUnit = unit;
+            updateUnitSwitchUI();
+            updateAndRunSimulation();
+        }
+
+        function updateUnitSwitchUI() {
+            const buttons = [elements.unitWhBtn, elements.unitWBtn, elements.unitAhBtn];
+            const activeClasses = 'bg-blue-600 text-white'.split(' ');
+            const inactiveClasses = 'text-gray-800 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'.split(' ');
+            
+            buttons.forEach(button => {
+                button.classList.remove(...activeClasses);
+                button.classList.add(...inactiveClasses);
+            });
+
+            const activeButton = document.getElementById(`unit-${currentUnit}`);
+            if (activeButton) {
+                activeButton.classList.remove(...inactiveClasses);
+                activeButton.classList.add(...activeClasses);
+            }
+        }
+
+
         // --- CHART FUNCTIONS ---
         function initializeChart() {
             const ctx = document.getElementById('powerChart').getContext('2d');
@@ -972,8 +1070,8 @@
                 data: {
                     labels: [],
                     datasets: [
-                        { label: 'Consumption (Wh)', data: [], backgroundColor: 'rgba(239, 68, 68, 0.6)', yAxisID: 'yPower', order: 2 },
-                        { label: 'Solar Gen. (Wh)', data: [], backgroundColor: 'rgba(234, 179, 8, 0.6)', yAxisID: 'yPower', order: 2 },
+                        { label: 'Consumption', data: [], backgroundColor: 'rgba(239, 68, 68, 0.6)', yAxisID: 'yPower', order: 2 },
+                        { label: 'Solar Gen.', data: [], backgroundColor: 'rgba(234, 179, 8, 0.6)', yAxisID: 'yPower', order: 2 },
                         { label: 'Battery Charge (%)', data: [], type: 'line', borderColor: 'rgba(59, 130, 246, 1)', backgroundColor: 'rgba(59, 130, 246, 0.2)', fill: true, tension: 0.3, yAxisID: 'yPercentage', pointRadius: 0, order: 1 }
                     ]
                 },
@@ -1011,9 +1109,28 @@
         function updateChartUI(consumption, solar, batterySOC, date) {
             const localDayStart = new Date(date + 'T00:00:00');
             chart.data.labels = Array.from({ length: 24 }, (_, i) => new Date(localDayStart.getTime() + i * 3600 * 1000));
-            chart.data.datasets[0].data = consumption;
-            chart.data.datasets[1].data = solar;
+            
+            let consumptionData = consumption;
+            let solarData = solar;
+            let yPowerLabel = 'Energy (Wh)';
+
+            switch(currentUnit) {
+                case 'w':
+                    // Data is already in avg watts per hour, which is equivalent to Wh for the graph's hourly buckets
+                    yPowerLabel = 'Power (W)';
+                    break;
+                case 'ah':
+                    consumptionData = consumption.map(wh => wh / 12);
+                    solarData = solar.map(wh => wh / 12);
+                    yPowerLabel = 'Charge (Ah)';
+                    break;
+            }
+
+            chart.data.datasets[0].data = consumptionData;
+            chart.data.datasets[1].data = solarData;
             chart.data.datasets[2].data = batterySOC;
+            chart.options.scales.yPower.title.text = yPowerLabel;
+
             chart.update();
         }
 
