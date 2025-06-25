@@ -40,61 +40,145 @@
             background: #6b7280; /* bg-gray-500 */
         }
         
+        /* Loading spinner animation */
+        .loader {
+            border: 2px solid #f3f3f3; /* Light grey */
+            border-top: 2px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         /* Custom styles for the new toggles */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #4A90E2;
+        .toggle-label {
+            position: relative;
+            display: block;
+            width: 2.5rem; /* 40px */
+            height: 1.5rem; /* 24px */
+        }
+        .toggle-label:before {
+          content: '';
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 1.25rem; /* 20px */
+          height: 1.25rem; /* 20px */
+          background-color: white;
+          border-radius: 9999px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+          transition: transform .2s ease-in-out;
         }
         .toggle-checkbox:checked + .toggle-label {
-            background-color: #4A90E2;
+            background-color: #3b82f6; /* bg-blue-500 */
+        }
+        .toggle-checkbox:checked + .toggle-label:before {
+            transform: translateX(1rem); /* 16px */
+        }
+
+        /* Utility class to hide elements */
+        .hidden {
+            display: none;
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
     <div class="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
         <header class="mb-8 text-center">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">Trip Charge Calculator</h1>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">Trip Charge Calculator</h1>
             <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">A solar-system sim for your camping trip, with a couple extra goodies.</p>
         </header>
 
         <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
             <!-- Left Column: Inputs -->
             <div class="xl:col-span-2 flex flex-col gap-8">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-bold mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">System Setup</h2>
-                    
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-8">
+                    <!-- Battery Bank Section -->
                     <div class="space-y-4">
-                        <h3 class="text-lg font-semibold text-blue-500 dark:text-blue-400">Battery</h3>
+                        <h3 class="text-xl font-bold text-blue-500 dark:text-blue-400 border-b border-gray-200 dark:border-gray-700 pb-2">Battery Bank</h3>
                         <div>
-                            <label for="batteryCapacity" class="block text-sm font-medium">Total Capacity (Ah)</label>
-                            <input type="number" id="batteryCapacity" value="200" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label for="batteryType" class="block text-sm font-medium">Battery Type</label>
+                            <label for="batteryType" class="block text-sm font-medium">Battery Type (for entire bank)</label>
                             <select id="batteryType" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 <option value="lithium">Lithium (LiFePO4)</option>
                                 <option value="agm">AGM</option>
                                 <option value="lead-acid">Lead-Acid</option>
                             </select>
                         </div>
+                        <div class="flex gap-2 items-end">
+                            <div class="flex-grow">
+                                <label for="newBatteryCapacity" class="block text-sm font-medium">Add Battery (Ah)</label>
+                                <select id="newBatteryCapacity" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <optgroup label="Common Sizes">
+                                        <option value="100">100 Ah</option>
+                                        <option value="120">120 Ah</option>
+                                        <option value="200">200 Ah</option>
+                                        <option value="300">300 Ah</option>
+                                    </optgroup>
+                                    <optgroup label="Compact Sizes">
+                                        <option value="50">50 Ah</option>
+                                        <option value="80">80 Ah</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <button id="addBatteryBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800">Add</button>
+                        </div>
+                        <div id="batteryList" class="mt-2 space-y-2"></div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Total Capacity</label>
+                            <p id="totalBatteryCapacity" class="text-lg font-bold text-gray-800 dark:text-gray-100">0 Ah</p>
+                        </div>
                     </div>
 
-                    <div class="space-y-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <h3 class="text-lg font-semibold text-yellow-500 dark:text-yellow-400">Solar & Location</h3>
-                        <div>
-                            <label for="solarWattage" class="block text-sm font-medium">Total Solar Panel Wattage (W)</label>
-                            <input type="number" id="solarWattage" value="400" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <!-- Solar Array Section -->
+                    <div class="space-y-4">
+                         <h3 class="text-xl font-bold text-yellow-500 dark:text-yellow-400 border-b border-gray-200 dark:border-gray-700 pb-2">Solar Array</h3>
+                         <div class="flex gap-2 items-end">
+                            <div class="flex-grow">
+                                <label for="newSolarPanelWattage" class="block text-sm font-medium">Add Panel (W)</label>
+                                <select id="newSolarPanelWattage" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <optgroup label="Most Common Panels">
+                                        <option value="150">150W</option>
+                                        <option value="160">160W</option>
+                                        <option value="180">180W</option>
+                                        <option value="200" selected>200W</option>
+                                    </optgroup>
+                                    <optgroup label="Other Sizes">
+                                        <option value="100">100W</option>
+                                        <option value="120">120W</option>
+                                        <option value="250">250W</option>
+                                        <option value="300">300W</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <button id="addSolarPanelBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800">Add</button>
                         </div>
+                        <div id="solarPanelList" class="mt-2 space-y-2"></div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Total Wattage</label>
+                            <p id="totalSolarWattage" class="text-lg font-bold text-gray-800 dark:text-gray-100">0 W</p>
+                        </div>
+                    </div>
+
+                    <!-- Location & Date Section -->
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-bold text-green-500 dark:text-green-400 border-b border-gray-200 dark:border-gray-700 pb-2">Location & Date</h3>
                         <div>
                             <label for="locationSearch" class="block text-sm font-medium">Location</label>
                             <div class="mt-1 flex gap-2">
                                 <input type="text" id="locationSearch" placeholder="e.g., Moab, UT" class="block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                <button id="searchLocationBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">Search</button>
+                                <button id="searchLocationBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800">Search</button>
                                 <button id="myLocationBtn" title="Use my current location" class="p-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
                                 </button>
                             </div>
-                            <div id="location-spinner" class="hidden mt-2 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"><div class="loader" style="width:16px; height:16px; border-width:2px;"></div><span id="location-status-text">Fetching location...</span></div>
+                            <div id="location-spinner" class="hidden mt-2 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                <div class="loader loader-sm"></div>
+                                <span id="location-status-text">Fetching location...</span>
+                            </div>
                         </div>
                         <div>
                             <label for="forecastDate" class="block text-sm font-medium">Forecast Date</label>
@@ -112,8 +196,16 @@
                              <button id="preset-extreme" title="Load a high-demand setup for a motorhome." class="px-3 py-1 text-sm font-semibold rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Extreme</button>
                         </div>
                     </div>
+
+                    <div class="flex items-center justify-between mb-4" title="Adds a continuous 5W load to simulate standby power from inverters, chargers, etc.">
+                        <span class="text-gray-700 dark:text-gray-300 font-medium">Phantom Loads</span>
+                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" id="phantom-load-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                            <label for="phantom-load-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                        </div>
+                    </div>
                     
-                    <div class="flex gap-2 mb-4">
+                    <div class="flex gap-2 mb-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                         <select id="applianceSelector" class="block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
                         <button id="addApplianceBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800">Add</button>
                         <button id="clearAppliancesBtn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800">Clear</button>
@@ -144,17 +236,17 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div id="dailyDrawCard" class="bg-red-100 dark:bg-red-900/50 p-4 rounded-lg text-center">
-                            <h3 id="daily-draw-label" class="text-sm font-medium text-red-800 dark:text-red-300">Daily Power Draw</h3>
-                            <p id="dailyDraw" class="text-2xl font-bold text-red-900 dark:text-red-200">-</p>
+                        <div id="dailyDrawCard" class="bg-gray-100 dark:bg-gray-700/50 p-4 rounded-lg text-center">
+                            <h3 id="daily-draw-label" class="text-sm font-medium text-gray-600 dark:text-gray-300">Daily Power Draw</h3>
+                            <p id="dailyDraw" class="text-2xl font-bold text-red-500">-</p>
                         </div>
-                        <div class="bg-yellow-100 dark:bg-yellow-900/50 p-4 rounded-lg text-center">
-                            <h3 id="solar-gen-label" class="text-sm font-medium text-yellow-800 dark:text-yellow-300">Est. Solar Generation</h3>
-                            <p id="solarGeneration" class="text-2xl font-bold text-yellow-900 dark:text-yellow-200">-</p>
+                        <div class="bg-gray-100 dark:bg-gray-700/50 p-4 rounded-lg text-center">
+                            <h3 id="solar-gen-label" class="text-sm font-medium text-gray-600 dark:text-gray-300">Est. Solar Generation</h3>
+                            <p id="solarGeneration" class="text-2xl font-bold text-yellow-500">-</p>
                         </div>
-                        <div class="bg-green-100 dark:bg-green-900/50 p-4 rounded-lg text-center">
-                            <h3 class="text-sm font-medium text-green-800 dark:text-green-300">Estimated Runtime</h3>
-                            <p id="estimatedRuntime" class="text-2xl font-bold text-green-900 dark:text-green-200">-</p>
+                        <div class="bg-gray-100 dark:bg-gray-700/50 p-4 rounded-lg text-center">
+                            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-300">Estimated Runtime</h3>
+                            <p id="estimatedRuntime" class="text-2xl font-bold text-green-500">-</p>
                         </div>
                     </div>
                      <!-- Restored Daylight Pane -->
@@ -231,12 +323,21 @@
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const PHANTOM_LOAD_WATTS = 5;
         
         // --- DOM ELEMENTS ---
         const elements = {
-            batteryCapacity: document.getElementById('batteryCapacity'),
             batteryType: document.getElementById('batteryType'),
-            solarWattage: document.getElementById('solarWattage'),
+            newBatteryCapacity: document.getElementById('newBatteryCapacity'),
+            addBatteryBtn: document.getElementById('addBatteryBtn'),
+            batteryList: document.getElementById('batteryList'),
+            totalBatteryCapacity: document.getElementById('totalBatteryCapacity'),
+
+            newSolarPanelWattage: document.getElementById('newSolarPanelWattage'),
+            addSolarPanelBtn: document.getElementById('addSolarPanelBtn'),
+            solarPanelList: document.getElementById('solarPanelList'),
+            totalSolarWattage: document.getElementById('totalSolarWattage'),
+            
             locationSearch: document.getElementById('locationSearch'),
             searchLocationBtn: document.getElementById('searchLocationBtn'),
             myLocationBtn: document.getElementById('myLocationBtn'),
@@ -272,6 +373,7 @@
             presetDream: document.getElementById('preset-dream'),
             presetExtreme: document.getElementById('preset-extreme'),
             clearAppliancesBtn: document.getElementById('clearAppliancesBtn'),
+            phantomLoadToggle: document.getElementById('phantom-load-toggle'),
         };
 
         // --- APP STATE ---
@@ -285,6 +387,7 @@
         let currentLocation = null;
         let hourlyConsumptionBreakdown = [];
         let currentUnit = 'wh'; // 'wh', 'w', or 'ah'
+        let phantomLoadActive = false;
 
         // Pre-defined constants for appliances and weather
         const APPLIANCE_PRESETS = { 'Compressor Fridge/Freezer': { watts: 50, pattern: 'fridge_intermittent' }, 'Water Pump': { watts: 60, pattern: 'broad_day' }, 'LED Lighting (Internal)': { watts: 10, pattern: 'evening_focused' }, 'Phone/Tablet Charging (USB)': { watts: 15, pattern: 'broad_day' }, '12V Television': { watts: 30, pattern: 'evening_focused' }, 'Roof Vent Fan (e.g., Maxxfan)': { watts: 20, pattern: 'broad_day' }, 'Rangehood/Extractor Fan': { watts: 15, pattern: 'meal_times_short' }, 'Diesel/Gas Heater Fan': { watts: 20, pattern: 'night_focused' }, 'Stereo/Radio': { watts: 15, pattern: 'evening_focused' }, 'Awning/Exterior LED Lights': { watts: 10, pattern: 'evening_focused' }, 'BMS & Monitors': { watts: 2, pattern: 'all_day_constant' }, 'Gas Detector / Smoke Alarm': { watts: 1, pattern: 'all_day_constant' }, 'Laptop Charging': { watts: 65, pattern: 'broad_day' }, 'Starlink (Standard)': { watts: 55, pattern: 'starlink_usage' }, 'Starlink Mini': { watts: 30, pattern: 'starlink_usage' }, 'Cel-Fi Go Booster': { watts: 15, pattern: 'all_day_constant' }, 'Air Conditioner': { watts: 1600, pattern: 'daytime_peak_solar' }, 'Microwave Oven': { watts: 1150, pattern: 'meal_times_short' }, 'Coffee Machine (Pod)': { watts: 1250, pattern: 'meal_times_short' }, 'Electric Kettle (240V)': { watts: 2000, pattern: 'meal_times_short' }, 'Induction Cooktop (Single)': { watts: 1900, pattern: 'meal_times_short' }, 'Air Fryer': { watts: 1500, pattern: 'meal_times_short' }, 'Washing Machine (Compact)': { watts: 250, pattern: 'daytime_peak_solar' }, 'Toaster': { watts: 800, pattern: 'meal_times_short' }, 'Hair Dryer': { watts: 1600, pattern: 'morning_routine' }, 'CPAP Machine': { watts: 50, pattern: 'night_focused' }, 'Thermomix/Blender (Peak)': { watts: 1500, pattern: 'meal_times_short' }, 'Air Compressor (Tyres)': { watts: 700, pattern: 'broad_day' }, '12V Travel Oven': { watts: 120, pattern: 'daytime_peak_solar' }, 'Vacuum Cleaner (Charging)': { watts: 25, pattern: 'broad_day' }, 'Electric Blanket (12V)': { watts: 50, pattern: 'night_focused' }, 'Security Camera (12V)': { watts: 5, pattern: 'all_day_constant' }, 'Power Tool Battery Charger': { watts: 150, pattern: 'daytime_peak_solar' }, 'Water Purifier (UV)': { watts: 8, pattern: 'broad_day' }, 'Electric Awning Motor': { watts: 30, pattern: 'broad_day' }, 'Electric Toilet': { watts: 5, pattern: 'broad_day' } };
@@ -356,12 +459,13 @@
             if (!firestoreDocRef || !isDataLoaded) return;
             
             const dataToSave = {
-                batteryCapacity: elements.batteryCapacity.value,
                 batteryType: elements.batteryType.value,
-                solarWattage: elements.solarWattage.value,
+                batteries: Array.from(elements.batteryList.children).map(el => parseFloat(el.dataset.capacity)),
+                solarPanels: Array.from(elements.solarPanelList.children).map(el => parseFloat(el.dataset.wattage)),
                 location: currentLocation,
                 date: elements.forecastDate.value,
-                unit: currentUnit, // Save the selected unit
+                unit: currentUnit, 
+                phantomLoad: phantomLoadActive,
                 appliances: Array.from(elements.applianceList.children).map(el => ({
                     name: el.dataset.name,
                     watts: el.querySelector('.appliance-watts').value,
@@ -378,11 +482,29 @@
 
         // --- UI & DATA MAPPING ---
         function applyDataToUI(data) {
-            elements.batteryCapacity.value = data.batteryCapacity || '200';
             elements.batteryType.value = data.batteryType || 'lithium';
-            elements.solarWattage.value = data.solarWattage || '400';
+
+            elements.batteryList.innerHTML = '';
+            if(data.batteries && data.batteries.length > 0) {
+                data.batteries.forEach(capacity => addBatteryUI(capacity));
+            } else {
+                addBatteryUI(100);
+            }
+            updateTotalBatteryCapacity();
+            
+            elements.solarPanelList.innerHTML = '';
+            if(data.solarPanels && data.solarPanels.length > 0) {
+                 data.solarPanels.forEach(wattage => addSolarPanelUI(wattage));
+            } else {
+                addSolarPanelUI(200);
+                addSolarPanelUI(200);
+            }
+            updateTotalSolarWattage();
+            
             elements.forecastDate.value = data.date || new Date().toISOString().split('T')[0];
             currentUnit = data.unit || 'wh';
+            phantomLoadActive = data.phantomLoad || false;
+            elements.phantomLoadToggle.checked = phantomLoadActive;
             updateUnitSwitchUI();
             
             if (data.location) {
@@ -402,12 +524,13 @@
              const offset = today.getTimezoneOffset();
              const localToday = new Date(today.getTime() - (offset*60*1000));
             return {
-                batteryCapacity: '200',
                 batteryType: 'lithium',
-                solarWattage: '400',
+                batteries: [100, 100],
+                solarPanels: [200, 200],
                 location: null,
                 date: localToday.toISOString().split('T')[0],
                 unit: 'wh',
+                phantomLoad: false,
                 appliances: [
                     { name: 'Compressor Fridge/Freezer', hours: '8', watts: APPLIANCE_PRESETS['Compressor Fridge/Freezer'].watts },
                     { name: 'LED Lighting (Internal)', hours: '4', watts: APPLIANCE_PRESETS['LED Lighting (Internal)'].watts },
@@ -440,8 +563,33 @@
 
         // --- EVENT LISTENERS ---
         function setupEventListeners() {
-            const simulationInputs = [elements.batteryCapacity, elements.solarWattage, elements.forecastDate, elements.batteryType];
+            const simulationInputs = [elements.batteryType];
             simulationInputs.forEach(el => el.addEventListener('change', updateAndRunSimulation));
+
+            elements.addBatteryBtn.addEventListener('click', () => {
+                const capacity = parseFloat(elements.newBatteryCapacity.value);
+                if (capacity > 0) addBatteryUI(capacity);
+            });
+            elements.addSolarPanelBtn.addEventListener('click', () => {
+                const wattage = parseFloat(elements.newSolarPanelWattage.value);
+                if(wattage > 0) addSolarPanelUI(wattage);
+            });
+
+            elements.batteryList.addEventListener('click', (e) => {
+                if(e.target.closest('.delete-item')) {
+                    e.target.closest('.item-card').remove();
+                    updateTotalBatteryCapacity();
+                    updateAndRunSimulation();
+                }
+            });
+
+            elements.solarPanelList.addEventListener('click', (e) => {
+                if(e.target.closest('.delete-item')) {
+                    e.target.closest('.item-card').remove();
+                    updateTotalSolarWattage();
+                    updateAndRunSimulation();
+                }
+            });
 
             elements.searchLocationBtn.addEventListener('click', handleLocationSearch);
             elements.myLocationBtn.addEventListener('click', handleGetMyPosition);
@@ -487,8 +635,55 @@
             elements.presetDream.addEventListener('click', () => loadPreset('dream'));
             elements.presetExtreme.addEventListener('click', () => loadPreset('extreme'));
 
+            elements.phantomLoadToggle.addEventListener('change', (e) => {
+                phantomLoadActive = e.target.checked;
+                updateAndRunSimulation();
+            });
+
             elements.modalCloseBtn.addEventListener('click', () => elements.modal.classList.add('hidden'));
         }
+        
+        // --- BATTERY & SOLAR UI ---
+        function addBatteryUI(capacity) {
+            const div = document.createElement('div');
+            div.className = 'item-card flex justify-between items-center bg-gray-100 dark:bg-gray-700/50 p-2 rounded-md';
+            div.dataset.capacity = capacity;
+            div.innerHTML = `
+                <span>${capacity} Ah Battery</span>
+                <button title="Delete" class="delete-item p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            `;
+            elements.batteryList.appendChild(div);
+            updateTotalBatteryCapacity();
+            updateAndRunSimulation();
+        }
+
+        function updateTotalBatteryCapacity() {
+            const total = Array.from(elements.batteryList.children).reduce((acc, el) => acc + parseFloat(el.dataset.capacity), 0);
+            elements.totalBatteryCapacity.textContent = `${total} Ah`;
+        }
+
+        function addSolarPanelUI(wattage) {
+            const div = document.createElement('div');
+            div.className = 'item-card flex justify-between items-center bg-gray-100 dark:bg-gray-700/50 p-2 rounded-md';
+            div.dataset.wattage = wattage;
+            div.innerHTML = `
+                <span>${wattage} W Panel</span>
+                <button title="Delete" class="delete-item p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            `;
+            elements.solarPanelList.appendChild(div);
+            updateTotalSolarWattage();
+            updateAndRunSimulation();
+        }
+
+        function updateTotalSolarWattage() {
+            const total = Array.from(elements.solarPanelList.children).reduce((acc, el) => acc + parseFloat(el.dataset.wattage), 0);
+            elements.totalSolarWattage.textContent = `${total} W`;
+        }
+
 
         // --- LOCATION HANDLING ---
         async function handleLocationSearch() {
@@ -672,12 +867,16 @@
                     });
                 }
             }
+            
+            const totalBatteryCapacity = Array.from(elements.batteryList.children).reduce((acc, el) => acc + parseFloat(el.dataset.capacity), 0);
+            const totalSolarWattage = Array.from(elements.solarPanelList.children).reduce((acc, el) => acc + parseFloat(el.dataset.wattage), 0);
+
 
             const inputs = {
-                batteryCapacityAh: parseFloat(elements.batteryCapacity.value),
+                batteryCapacityAh: totalBatteryCapacity,
                 usableCapacity: elements.batteryType.value === 'lithium' ? 0.9 : 0.5,
                 systemVoltage: 12,
-                solarWattage: parseFloat(elements.solarWattage.value),
+                solarWattage: totalSolarWattage,
                 date: elements.forecastDate.value,
                 lat: currentLocation.lat,
                 lon: currentLocation.lon,
@@ -691,7 +890,7 @@
             
             if (Object.values(inputs).some(v => isNaN(v) && typeof v !== 'object' && typeof v !== 'string') || !inputs.date) {
                 elements.resultsSpinner.classList.add('hidden');
-                updateSuggestionBox({ type: "warning", message: "Please fill in all system setup values to run a simulation." });
+                updateSuggestionBox({ type: "warning", messages: ["Please fill in all system setup values to run a simulation."] });
                 return;
             }
 
@@ -738,6 +937,14 @@
         }
 
         function distributeApplianceLoad(appliances, hourlyConsumption, hourlyConsumptionBreakdown) {
+            // Add phantom load first if active
+            if (phantomLoadActive) {
+                for (let i = 0; i < 24; i++) {
+                    hourlyConsumption[i] += PHANTOM_LOAD_WATTS;
+                    hourlyConsumptionBreakdown[i].push({ name: 'Phantom Loads', watts: PHANTOM_LOAD_WATTS });
+                }
+            }
+            
             appliances.forEach(appliance => {
                 let hoursLeft = appliance.hours;
                 if (isNaN(hoursLeft) || hoursLeft <= 0) return;
@@ -848,59 +1055,69 @@
         }
 
         // --- UI UPDATE FUNCTIONS ---
-        function generateAdvancedSuggestions(appliances, batterySOC, sunTimes) {
+        function generateAdvancedSuggestions(consumption, solar, batterySOC, usableBatteryWh, weatherData, sunTimes, inputs) {
             const suggestions = [];
-            const highPowerAppliances = appliances.filter(a => a.watts > 1000);
-            const nightAppliances = appliances.filter(a => a.pattern === 'night_focused' || a.pattern === 'all_day_constant' || a.pattern === 'fridge_intermittent');
-            const has = (namePart) => appliances.some(a => a.name.toLowerCase().includes(namePart.toLowerCase()));
+            const totalDraw = consumption.reduce((a, b) => a + b, 0);
+            const totalSolar = solar.reduce((a,b) => a+b, 0);
+            const firstEmptyHour = batterySOC.findIndex(soc => soc < 1);
+            const has = (namePart) => inputs.appliances.some(a => a.name.toLowerCase().includes(namePart.toLowerCase()));
+            let primaryMessage = "";
+            let primaryType = "info";
 
+            // Primary Status Logic
+            if (firstEmptyHour !== -1) {
+                primaryType = 'critical';
+                primaryMessage = `CRITICAL: Your battery is projected to run out in approximately ${firstEmptyHour} hours. Your current load is unsustainable and requires immediate action.`;
+                const topConsumers = [...inputs.appliances]
+                    .sort((a, b) => (b.watts * b.hours) - (a.watts * a.hours))
+                    .slice(0, 2)
+                    .map(a => a.name);
+                if(topConsumers.length > 0) {
+                    suggestions.push(`Your highest consumers are: ${topConsumers.join(' and ')}. Consider reducing or eliminating their use.`);
+                }
+            } else if (totalSolar < totalDraw) {
+                primaryType = 'warning';
+                const deficit = totalDraw - totalSolar;
+                const runtimeHours = (usableBatteryWh / deficit) * 24;
+                const runtimeDays = (runtimeHours / 24).toFixed(1);
+                primaryMessage = `WARNING: You have a daily power deficit of ${Math.round(deficit)} Wh. Your system is not sustainable long-term.`;
+                suggestions.push(`At this rate, your battery reserve will only last about ${runtimeDays} days. Reduce your consumption or find an alternative charging source.`);
+            } else {
+                primaryType = 'info';
+                const surplus = totalSolar - totalDraw;
+                primaryMessage = `GOOD: You have a daily power surplus of ${Math.round(surplus)} Wh. Your system is stable for these conditions.`;
+                if(surplus > (usableBatteryWh * 0.5)) {
+                    suggestions.push("Your solar array is significantly oversized for your current load, which is great for ensuring a full charge even on cloudy days.");
+                }
+            }
+
+            // Secondary, appliance-specific suggestions
+            const highPowerAppliances = inputs.appliances.filter(a => a.watts > 1000);
             if (highPowerAppliances.length > 1) {
-                suggestions.push(`You have multiple high-power appliances (${highPowerAppliances.map(a => a.name).join(', ')}). Avoid using them simultaneously to prevent tripping your inverter.`);
+                suggestions.push(`CAUTION: You have multiple high-wattage appliances (${highPowerAppliances.map(a => a.name).join(', ')}). Avoid using them simultaneously to prevent tripping your inverter.`);
+            }
+            if (has('air conditioner') && totalSolar < totalDraw) {
+                suggestions.push("Air conditioners are very power-hungry. On days with a power deficit, it's best to use it only during peak solar hours (11am-3pm) to minimize battery drain.");
+            }
+            if (has('kettle') || has('coffee machine') || has('hair dryer')) {
+                suggestions.push("High-wattage heating appliances like kettles and hair dryers are best used when the sun is out to leverage solar power directly.");
+            }
+            if(inputs.batteryType !== 'lithium' && highPowerAppliances.length > 0) {
+                suggestions.push(`Your ${inputs.batteryType.toUpperCase()} battery is not ideal for high-power appliances. Heavy loads can shorten its lifespan. Consider upgrading to Lithium for better performance with these devices.`);
+            }
+            if(totalSolar < totalDraw && weatherData.daily.weather_code[0] > 2) {
+                 suggestions.push(`The forecast shows overcast or rainy conditions, which significantly reduces your solar generation. It's crucial to conserve power until the weather clears.`);
             }
 
-            if (has('air conditioner')) {
-                suggestions.push('To maximize A/C use, run it during peak solar hours (around midday) to offset its heavy power draw directly with solar generation.');
-            }
 
-            const sunriseHour = sunTimes.sunrise.getHours();
-            const sunsetHour = sunTimes.sunset.getHours();
-            const nightDuration = (24 - sunsetHour) + sunriseHour;
-            const nightConsumption = nightAppliances.reduce((total, app) => {
-                let nightRatio = 1;
-                if (app.pattern === 'all_day_constant' || app.pattern === 'fridge_intermittent') {
-                    nightRatio = nightDuration / 24;
-                }
-                return total + (app.watts * app.hours * nightRatio);
-            }, 0);
-
-            if (nightConsumption > 500) {
-                 suggestions.push(`Your estimated overnight power consumption is significant (${Math.round(nightConsumption)} Wh). Ensure your battery is well-charged before sunset.`);
-            }
-            
-            if (has('starlink')) {
-                suggestions.push("Starlink is a constant power draw. To save power, use its 'Sleep Schedule' feature in the app to turn it off overnight if you don't need it.");
-            }
-
-            if (has('kettle') || has('induction') || has('coffee')) {
-                const isBatteryLow = batterySOC.some(soc => soc < 50);
-                if (isBatteryLow) {
-                    suggestions.push('Your high-draw cooking appliances consume a lot of power. When battery is low, consider using a gas alternative to boil water or cook.');
-                }
-            }
-            
-            const batteryType = elements.batteryType.value;
-            if ((batteryType === 'agm' || batteryType === 'lead-acid') && highPowerAppliances.length > 0) {
-                suggestions.push(`Running high-power appliances on ${batteryType.toUpperCase()} batteries can shorten their lifespan due to high discharge rates. Lithium batteries handle high loads more effectively.`);
-            }
-
-            return suggestions;
+            return { type: primaryType, messages: [primaryMessage, ...suggestions] };
         }
 
         function updateSimulationResultsUI(consumption, solar, batterySOC, usableBatteryWh, weatherData, sunTimes, solarPanelWatts) {
             const totalDraw = consumption.reduce((a, b) => a + b, 0);
             const totalSolar = solar.reduce((a, b) => a + b, 0);
 
-            let displayDraw, displaySolar, unitLabel, tooltipText;
+            let displayDraw, displaySolar, unitLabel;
             switch (currentUnit) {
                 case 'w':
                     displayDraw = totalDraw / 24;
@@ -908,8 +1125,7 @@
                     unitLabel = 'W';
                     elements.dailyDrawLabel.textContent = "Avg. Power Draw";
                     elements.solarGenLabel.textContent = "Avg. Solar Power";
-                    tooltipText = "This is the average power needed over 24 hours to meet your total daily energy consumption (Wh). It's not the sum of instantaneous wattages, but rather the total Wh divided by 24.";
-                    elements.dailyDrawCard.setAttribute('title', tooltipText);
+                    elements.dailyDrawCard.setAttribute('title', "This is the average power needed over 24 hours to meet your total daily energy consumption (Wh). It's not the sum of instantaneous wattages, but rather the total Wh divided by 24.");
                     break;
                 case 'ah':
                     displayDraw = totalDraw / 12;
@@ -936,7 +1152,7 @@
             
             if (firstEmptyHour !== -1) {
                 elements.estimatedRuntime.textContent = `~${firstEmptyHour} hours`;
-                elements.estimatedRuntime.className = "text-2xl font-bold text-red-900 dark:text-red-200";
+                elements.estimatedRuntime.className = "text-2xl font-bold text-red-500";
             } else if (totalSolar < totalDraw) {
                 const deficit = totalDraw - totalSolar;
                 const runtimeInHours = (usableBatteryWh / deficit) * 24;
@@ -948,10 +1164,10 @@
                     elements.estimatedRuntime.textContent = `~${Math.floor(runtimeInHours)} hours`;
                 }
                 
-                elements.estimatedRuntime.className = "text-2xl font-bold text-yellow-600 dark:text-yellow-400";
+                elements.estimatedRuntime.className = "text-2xl font-bold text-yellow-500";
             } else {
                 elements.estimatedRuntime.textContent = "Sustainable";
-                elements.estimatedRuntime.className = "text-2xl font-bold text-green-900 dark:text-green-200";
+                elements.estimatedRuntime.className = "text-2xl font-bold text-green-500";
             }
 
             const daylightHours = (sunTimes.sunset - sunTimes.sunrise) / 3600000;
@@ -963,24 +1179,13 @@
             const dominantWeatherCode = weatherData.daily.weather_code[0];
             elements.weatherForecast.textContent = WEATHER_CODES[dominantWeatherCode]?.name ?? "Varied";
             
-            let primarySuggestion;
-            if (firstEmptyHour !== -1) {
-                primarySuggestion = { type: "critical", message: `CRITICAL: Your battery is projected to run out in about ${firstEmptyHour} hours. Reduce load immediately.` };
-            } else if (totalSolar < totalDraw) {
-                const deficit = totalDraw - totalSolar;
-                primarySuggestion = { type: "warning", message: `WARNING: You have a daily power deficit of ${Math.round(deficit)} Wh. Your battery may not fully recharge. Consider reducing load.` };
-            } else {
-                const surplus = totalSolar - totalDraw;
-                primarySuggestion = { type: "info", message: `GOOD: You have a daily power surplus of ${Math.round(surplus)} Wh. Your system is stable for these conditions.` };
-            }
+            const inputs = {
+                appliances: Array.from(elements.applianceList.children).map(el => ({ name: el.dataset.name, watts: parseFloat(el.querySelector('.appliance-watts').value), hours: parseFloat(el.querySelector('.appliance-hours').value), pattern: APPLIANCE_PRESETS[el.dataset.name].pattern })),
+                batteryType: elements.batteryType.value,
+            };
 
-            const applianceInputs = Array.from(elements.applianceList.children).map(el => ({
-                name: el.dataset.name, watts: parseFloat(el.querySelector('.appliance-watts').value),
-                hours: parseFloat(el.querySelector('.appliance-hours').value), pattern: APPLIANCE_PRESETS[el.dataset.name].pattern
-            }));
-            const advancedSuggestions = generateAdvancedSuggestions(applianceInputs, batterySOC, sunTimes);
-
-            updateSuggestionBox(primarySuggestion, advancedSuggestions);
+            const suggestions = generateAdvancedSuggestions(consumption, solar, batterySOC, usableBatteryWh, weatherData, sunTimes, inputs);
+            updateSuggestionBox(suggestions.type, suggestions.messages);
         }
 
         function updateForecastUI(weatherData) {
@@ -1015,25 +1220,26 @@
             });
         }
         
-        function updateSuggestionBox(primary, advanced = []) {
-            const { type, message } = primary;
-            
+        function updateSuggestionBox(type, messages) {
             elements.suggestionText.innerHTML = '';
             
-            const primaryMessageEl = document.createElement('p');
-            primaryMessageEl.textContent = message;
-            elements.suggestionText.appendChild(primaryMessageEl);
-
-            if (advanced.length > 0) {
-                const suggestionList = document.createElement('ul');
-                suggestionList.className = 'list-disc list-inside mt-3 space-y-1 text-left';
-                advanced.forEach(suggestionText => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = suggestionText;
-                    suggestionList.appendChild(listItem);
-                });
-                elements.suggestionText.appendChild(suggestionList);
-            }
+            messages.forEach((text, index) => {
+                if (index === 0) {
+                    const p = document.createElement('p');
+                    p.textContent = text;
+                    p.className = 'font-semibold';
+                    elements.suggestionText.appendChild(p);
+                } else {
+                    if (elements.suggestionText.querySelector('ul') === null) {
+                        const ul = document.createElement('ul');
+                        ul.className = 'list-disc list-inside mt-3 space-y-1 text-left';
+                        elements.suggestionText.appendChild(ul);
+                    }
+                    const li = document.createElement('li');
+                    li.textContent = text;
+                    elements.suggestionText.querySelector('ul').appendChild(li);
+                }
+            });
 
              const baseClasses = 'mt-2 text-sm';
              const colorMap = {
@@ -1045,9 +1251,9 @@
 
             const parentBox = elements.suggestionText.closest('#suggestionBox > div').parentElement;
             if (parentBox) {
-                 parentBox.className = `mt-4 p-4 rounded-lg ${colorMap[type].box}`;
+                 parentBox.className = `mt-6 pt-6 border-t border-gray-200 dark:border-gray-700`;
+                 parentBox.firstElementChild.className = `font-bold flex items-center gap-2 ${colorMap[type].text.replace('text-blue-200', 'text-blue-300').replace('text-yellow-200', 'text-yellow-300').replace('text-red-200', 'text-red-300')}`;
             }
-
         }
         
         function showSpinner(text) {
@@ -1137,7 +1343,7 @@
                                 }
                             }
                         },
-                        legend: { labels: { color: color } }
+                        legend: { labels: { color: color, usePointStyle: true, pointStyle: 'rect' } }
                     },
                     interaction: { mode: 'index', intersect: false }
                 }
