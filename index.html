@@ -486,18 +486,18 @@
 
             elements.batteryList.innerHTML = '';
             if(data.batteries && data.batteries.length > 0) {
-                data.batteries.forEach(capacity => addBatteryUI(capacity));
+                data.batteries.forEach(capacity => addBatteryUI(capacity, false));
             } else {
-                addBatteryUI(100);
+                addBatteryUI(100, false);
             }
             updateTotalBatteryCapacity();
             
             elements.solarPanelList.innerHTML = '';
             if(data.solarPanels && data.solarPanels.length > 0) {
-                 data.solarPanels.forEach(wattage => addSolarPanelUI(wattage));
+                 data.solarPanels.forEach(wattage => addSolarPanelUI(wattage, false));
             } else {
-                addSolarPanelUI(200);
-                addSolarPanelUI(200);
+                addSolarPanelUI(200, false);
+                addSolarPanelUI(200, false);
             }
             updateTotalSolarWattage();
             
@@ -542,8 +542,12 @@
         }
         
         function populateApplianceDropdown() {
-            const mostCommon = ['Compressor Fridge/Freezer', 'Water Pump', 'LED Lighting (Internal)', 'Phone/Tablet Charging (USB)', '12V Television', 'Roof Vent Fan (e.g., Maxxfan)', 'Rangehood/Extractor Fan', 'Diesel/Gas Heater Fan', 'Stereo/Radio', 'Laptop Charging', 'Starlink (Standard)', 'Starlink Mini', 'BMS & Monitors', 'Gas Detector / Smoke Alarm', 'Cel-Fi Go Booster'];
-            const highDemand = Object.keys(APPLIANCE_PRESETS).filter(k => !mostCommon.includes(k));
+            const mostCommon = ['Compressor Fridge/Freezer', 'LED Lighting (Internal)', 'Water Pump', 'Roof Vent Fan (e.g., Maxxfan)', 'Phone/Tablet Charging (USB)', 'Diesel/Gas Heater Fan'];
+            const electronics = ['12V Television', 'Laptop Charging', 'Starlink (Standard)', 'Starlink Mini', 'Stereo/Radio', 'Cel-Fi Go Booster'];
+            const kitchenHigh = ['Microwave Oven', 'Coffee Machine (Pod)', 'Electric Kettle (240V)', 'Induction Cooktop (Single)', 'Air Fryer', 'Toaster', 'Thermomix/Blender (Peak)', '12V Travel Oven'];
+            const comfort = ['Air Conditioner', 'Electric Blanket (12V)', 'Hair Dryer', 'CPAP Machine'];
+            const utility = ['Washing Machine (Compact)', 'Air Compressor (Tyres)', 'Vacuum Cleaner (Charging)', 'Power Tool Battery Charger', 'Electric Awning Motor'];
+            const safety = ['BMS & Monitors', 'Gas Detector / Smoke Alarm'];
 
             const createOptGroup = (label, items) => {
                 const group = document.createElement('optgroup');
@@ -556,9 +560,14 @@
                 });
                 return group;
             };
-            
-            elements.applianceSelector.appendChild(createOptGroup('Most Common Appliances', mostCommon));
-            elements.applianceSelector.appendChild(createOptGroup('High-Demand & Other', highDemand));
+
+            elements.applianceSelector.innerHTML = '';
+            elements.applianceSelector.appendChild(createOptGroup('Most Common', mostCommon));
+            elements.applianceSelector.appendChild(createOptGroup('Electronics & Entertainment', electronics));
+            elements.applianceSelector.appendChild(createOptGroup('High-Power Kitchen', kitchenHigh));
+            elements.applianceSelector.appendChild(createOptGroup('Comfort & Climate', comfort));
+            elements.applianceSelector.appendChild(createOptGroup('Utility & Tools', utility));
+            elements.applianceSelector.appendChild(createOptGroup('Safety & Monitoring', safety));
         }
 
         // --- EVENT LISTENERS ---
@@ -604,6 +613,12 @@
             
             elements.applianceList.addEventListener('change', (e) => {
                 if (e.target.matches('.appliance-watts, .appliance-hours')) {
+                    if (e.target.hasAttribute('data-dynamic-hours')) {
+                        e.target.removeAttribute('data-dynamic-hours');
+                        e.target.removeAttribute('readonly');
+                        e.target.classList.remove('bg-gray-200', 'dark:bg-gray-800', 'cursor-not-allowed');
+                        e.target.classList.add('bg-white', 'dark:bg-gray-600');
+                    }
                     updateAndRunSimulation();
                 }
             });
@@ -644,7 +659,7 @@
         }
         
         // --- BATTERY & SOLAR UI ---
-        function addBatteryUI(capacity) {
+        function addBatteryUI(capacity, runSim = true) {
             const div = document.createElement('div');
             div.className = 'item-card flex justify-between items-center bg-gray-100 dark:bg-gray-700/50 p-2 rounded-md';
             div.dataset.capacity = capacity;
@@ -656,7 +671,7 @@
             `;
             elements.batteryList.appendChild(div);
             updateTotalBatteryCapacity();
-            updateAndRunSimulation();
+            if(runSim) updateAndRunSimulation();
         }
 
         function updateTotalBatteryCapacity() {
@@ -664,7 +679,7 @@
             elements.totalBatteryCapacity.textContent = `${total} Ah`;
         }
 
-        function addSolarPanelUI(wattage) {
+        function addSolarPanelUI(wattage, runSim = true) {
             const div = document.createElement('div');
             div.className = 'item-card flex justify-between items-center bg-gray-100 dark:bg-gray-700/50 p-2 rounded-md';
             div.dataset.wattage = wattage;
@@ -676,7 +691,7 @@
             `;
             elements.solarPanelList.appendChild(div);
             updateTotalSolarWattage();
-            updateAndRunSimulation();
+            if(runSim) updateAndRunSimulation();
         }
 
         function updateTotalSolarWattage() {
@@ -751,23 +766,24 @@
             const preset = APPLIANCE_PRESETS[name];
             if (!preset) return;
 
-            const isFridge = name === 'Compressor Fridge/Freezer';
-            
+            const isDynamic = ['Compressor Fridge/Freezer', 'Air Conditioner', 'Roof Vent Fan (e.g., Maxxfan)'].includes(name);
+            const dynamicType = isDynamic ? name.replace(/\s+/g, '-').toLowerCase() : '';
+
             let defaultHours = name.toLowerCase().includes('microwave') ? 0.1 : 1.0;
-            const finalHours = isFridge ? 0 : (hours !== null ? hours : defaultHours);
+            const finalHours = isDynamic ? 0 : (hours !== null ? hours : defaultHours);
             const finalWatts = (watts !== null) ? watts : preset.watts;
 
-            const readonlyAttribute = isFridge ? 'readonly' : '';
-            const dynamicAttribute = isFridge ? 'data-dynamic-hours="fridge"' : '';
-            const titleAttribute = isFridge ? 'title="Runtime is automatically calculated based on the ambient temperature forecast."' : '';
-            const fridgeStyling = isFridge ? 'bg-gray-200 dark:bg-gray-800 cursor-not-allowed' : 'bg-white dark:bg-gray-600';
+            const readonlyAttribute = isDynamic ? 'readonly' : '';
+            const dynamicAttribute = isDynamic ? `data-dynamic-hours="${dynamicType}"` : '';
+            const titleAttribute = isDynamic ? 'title="Runtime is automatically calculated based on the ambient temperature forecast. Click to override."' : '';
+            const dynamicStyling = isDynamic ? 'bg-gray-200 dark:bg-gray-800 cursor-not-allowed' : 'bg-white dark:bg-gray-600';
 
             const div = document.createElement('div');
             div.className = 'appliance-item grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-md';
             div.innerHTML = `
                 <span class="font-medium truncate" title="${name}">${name}</span>
                 <input type="number" value="${finalWatts}" class="appliance-watts w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 bg-white dark:bg-gray-600">
-                <input type="number" step="0.25" value="${parseFloat(finalHours).toFixed(2)}" class="appliance-hours w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 ${fridgeStyling}" min="0" max="24" ${dynamicAttribute} ${readonlyAttribute} ${titleAttribute}>
+                <input type="number" step="0.25" value="${parseFloat(finalHours).toFixed(2)}" class="appliance-hours w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 ${dynamicStyling}" min="0" max="24" ${dynamicAttribute} ${readonlyAttribute} ${titleAttribute}>
                 <button title="Delete" class="delete-appliance p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -782,16 +798,16 @@
 
             if (presetName === 'common') {
                 presetAppliances = [
-                    { name: 'Compressor Fridge/Freezer', hours: 8 },
+                    { name: 'Compressor Fridge/Freezer' },
                     { name: 'LED Lighting (Internal)', hours: 4 },
                     { name: 'Water Pump', hours: 0.25 },
-                    { name: 'Roof Vent Fan (e.g., Maxxfan)', hours: 8 },
+                    { name: 'Roof Vent Fan (e.g., Maxxfan)' },
                     { name: 'Phone/Tablet Charging (USB)', hours: 2 },
                     { name: 'Diesel/Gas Heater Fan', hours: 6 }
                 ];
             } else if (presetName === 'dream') {
                 presetAppliances = [
-                    { name: 'Compressor Fridge/Freezer', hours: 8 },
+                    { name: 'Compressor Fridge/Freezer' },
                     { name: 'Starlink (Standard)', hours: 16 },
                     { name: '12V Television', hours: 3 },
                     { name: 'LED Lighting (Internal)', hours: 5 },
@@ -799,13 +815,16 @@
                     { name: 'Microwave Oven', hours: 0.25 },
                     { name: 'Laptop Charging', hours: 4 },
                     { name: 'Water Pump', hours: 0.5 },
-                    { name: 'Roof Vent Fan (e.g., Maxxfan)', hours: 10 }
+                    { name: 'Roof Vent Fan (e.g., Maxxfan)' },
+                    { name: 'Diesel/Gas Heater Fan', hours: 6 },
+                    { name: 'Stereo/Radio', hours: 3 },
+                    { name: 'Awning/Exterior LED Lights', hours: 2 }
                 ];
             } else if (presetName === 'extreme') {
                  presetAppliances = [
-                    { name: 'Compressor Fridge/Freezer', hours: 8 },
+                    { name: 'Compressor Fridge/Freezer' },
                     { name: 'Starlink (Standard)', hours: 12 },
-                    { name: 'Air Conditioner', hours: 5 },
+                    { name: 'Air Conditioner' },
                     { name: 'Washing Machine (Compact)', hours: 1.5 },
                     { name: 'Induction Cooktop (Single)', hours: 1 },
                     { name: 'Microwave Oven', hours: 0.25 },
@@ -815,7 +834,7 @@
                     { name: 'Laptop Charging', hours: 5 },
                     { name: 'LED Lighting (Internal)', hours: 6 },
                     { name: 'Water Pump', hours: 0.75 },
-                    { name: 'Roof Vent Fan (e.g., Maxxfan)', hours: 12 },
+                    { name: 'Roof Vent Fan (e.g., Maxxfan)' },
                     { name: 'Diesel/Gas Heater Fan', hours: 8 },
                     { name: 'Power Tool Battery Charger', hours: 2 }
                 ];
@@ -854,23 +873,30 @@
                 showModal("Weather Error", "Failed to get valid weather data. The forecast may be inaccurate.");
                 return;
             }
-
-            const fridgeHoursInputs = document.querySelectorAll('.appliance-hours[data-dynamic-hours="fridge"]');
-            if (fridgeHoursInputs.length > 0 && weatherData.daily) {
+            
+            if (weatherData.daily) {
                 const dateIndex = weatherData.daily.time.findIndex(d => d === prelimInputs.date);
                 if (dateIndex !== -1) {
                     const minTemp = weatherData.daily.temperature_2m_min[dateIndex];
                     const maxTemp = weatherData.daily.temperature_2m_max[dateIndex];
-                    const estimatedFridgeHours = estimateFridgeRunTime(minTemp, maxTemp);
-                    fridgeHoursInputs.forEach(input => {
-                        input.value = estimatedFridgeHours.toFixed(2);
+                    
+                    document.querySelectorAll('.appliance-hours[data-dynamic-hours]').forEach(input => {
+                        const type = input.dataset.dynamicHours;
+                        let estimatedHours = 0;
+                        if(type === 'compressor-fridge/freezer') {
+                            estimatedHours = estimateFridgeRunTime(minTemp, maxTemp);
+                        } else if (type === 'air-conditioner') { 
+                             estimatedHours = estimateAcRunTime(minTemp, maxTemp);
+                        } else if (type === 'roof-vent-fan-(e-g-,-maxxfan)') { 
+                             estimatedHours = estimateFanRunTime(minTemp, maxTemp);
+                        }
+                        input.value = estimatedHours.toFixed(2);
                     });
                 }
             }
             
             const totalBatteryCapacity = Array.from(elements.batteryList.children).reduce((acc, el) => acc + parseFloat(el.dataset.capacity), 0);
             const totalSolarWattage = Array.from(elements.solarPanelList.children).reduce((acc, el) => acc + parseFloat(el.dataset.wattage), 0);
-
 
             const inputs = {
                 batteryCapacityAh: totalBatteryCapacity,
@@ -893,7 +919,6 @@
                 updateSuggestionBox({ type: "warning", messages: ["Please fill in all system setup values to run a simulation."] });
                 return;
             }
-
 
             const sunTimes = calculateSunTimes(new Date(inputs.date + 'T12:00:00'), inputs.lat, inputs.lon);
             const totalBatteryWh = inputs.batteryCapacityAh * inputs.systemVoltage;
@@ -1054,6 +1079,28 @@
             return Math.max(1.5, Math.min(24, estimatedHours));
         }
 
+        function estimateAcRunTime(minTemp, maxTemp) {
+            const ambientTemp = (minTemp + maxTemp) / 2;
+            const activationTemp = 24; // AC only runs above this temp
+            if (ambientTemp <= activationTemp) return 0;
+
+            const tempDifference = ambientTemp - activationTemp;
+            const hours = tempDifference * 0.75; // 45 mins of runtime for every degree above activation temp
+            return Math.min(8, hours); // Capped at 8 hours
+        }
+
+        function estimateFanRunTime(minTemp, maxTemp) {
+            const ambientTemp = (minTemp + maxTemp) / 2;
+            const baseHours = 2; // Base runtime for air circulation
+            const activationTemp = 20;
+            let additionalHours = 0;
+
+            if (ambientTemp > activationTemp) {
+                additionalHours = (ambientTemp - activationTemp) * 0.5; // 30 mins for every degree above 20°C
+            }
+            return Math.min(24, baseHours + additionalHours);
+        }
+
         // --- UI UPDATE FUNCTIONS ---
         function generateAdvancedSuggestions(consumption, solar, batterySOC, usableBatteryWh, weatherData, sunTimes, inputs) {
             const suggestions = [];
@@ -1067,7 +1114,7 @@
             // Primary Status Logic
             if (firstEmptyHour !== -1) {
                 primaryType = 'critical';
-                primaryMessage = `CRITICAL: Your battery is projected to run out in approximately ${firstEmptyHour} hours. Your current load is unsustainable and requires immediate action.`;
+                primaryMessage = `Your battery is projected to run out in approximately ${firstEmptyHour} hours. Your current load is unsustainable and requires immediate action.`;
                 const topConsumers = [...inputs.appliances]
                     .sort((a, b) => (b.watts * b.hours) - (a.watts * a.hours))
                     .slice(0, 2)
@@ -1079,9 +1126,15 @@
                 primaryType = 'warning';
                 const deficit = totalDraw - totalSolar;
                 const runtimeHours = (usableBatteryWh / deficit) * 24;
-                const runtimeDays = (runtimeHours / 24).toFixed(1);
-                primaryMessage = `WARNING: You have a daily power deficit of ${Math.round(deficit)} Wh. Your system is not sustainable long-term.`;
-                suggestions.push(`At this rate, your battery reserve will only last about ${runtimeDays} days. Reduce your consumption or find an alternative charging source.`);
+                const runtimeDays = (runtimeHours / 24);
+                if(runtimeDays > 7) {
+                    primaryType = 'info';
+                    primaryMessage = "SUSTAINABLE: Although there is a daily power deficit, your battery bank is large enough to sustain this load for over a week."
+                } else {
+                     primaryMessage = `WARNING: You have a daily power deficit of ${Math.round(deficit)} Wh. Your system is not sustainable long-term.`;
+                     suggestions.push(`At this rate, your battery reserve will only last about ${runtimeDays.toFixed(1)} days. Reduce your consumption or find an alternative charging source.`);
+                }
+
             } else {
                 primaryType = 'info';
                 const surplus = totalSolar - totalDraw;
@@ -1156,15 +1209,19 @@
             } else if (totalSolar < totalDraw) {
                 const deficit = totalDraw - totalSolar;
                 const runtimeInHours = (usableBatteryWh / deficit) * 24;
+                const runtimeInDays = runtimeInHours / 24;
                 
-                if (runtimeInHours > 48) {
-                    const runtimeInDays = runtimeInHours / 24;
+                if (runtimeInDays > 7) {
+                    elements.estimatedRuntime.textContent = "Sustainable";
+                    elements.estimatedRuntime.className = "text-2xl font-bold text-green-500";
+                } else if (runtimeInHours > 48) {
                     elements.estimatedRuntime.textContent = `~${runtimeInDays.toFixed(1)} days`;
+                    elements.estimatedRuntime.className = "text-2xl font-bold text-yellow-500";
                 } else {
                     elements.estimatedRuntime.textContent = `~${Math.floor(runtimeInHours)} hours`;
+                    elements.estimatedRuntime.className = "text-2xl font-bold text-yellow-500";
                 }
                 
-                elements.estimatedRuntime.className = "text-2xl font-bold text-yellow-500";
             } else {
                 elements.estimatedRuntime.textContent = "Sustainable";
                 elements.estimatedRuntime.className = "text-2xl font-bold text-green-500";
