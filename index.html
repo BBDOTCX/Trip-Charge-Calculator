@@ -42,12 +42,17 @@
         
         /* Loading spinner animation */
         .loader {
-            border: 2px solid #f3f3f3; /* Light grey */
-            border-top: 2px solid #3498db; /* Blue */
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
             border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        .loader-sm {
             width: 16px;
             height: 16px;
-            animation: spin 1s linear infinite;
+            border-width: 2px;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -86,20 +91,21 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
     <div class="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
         <header class="mb-8 text-center">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">Trip Charge Calculator</h1>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">Trip Charge Calculator</h1>
             <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">A solar-system sim for your camping trip, with a couple extra goodies.</p>
         </header>
 
         <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
             <!-- Left Column: Inputs -->
             <div class="xl:col-span-2 flex flex-col gap-8">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-8">
-                    <!-- Battery Bank Section -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">System Setup</h2>
+                    
                     <div class="space-y-4">
-                        <h3 class="text-xl font-bold text-blue-500 dark:text-blue-400 border-b border-gray-200 dark:border-gray-700 pb-2">Battery Bank</h3>
+                        <h3 class="text-lg font-semibold text-blue-500 dark:text-blue-400">Battery Bank</h3>
                         <div>
                             <label for="batteryType" class="block text-sm font-medium">Battery Type (for entire bank)</label>
                             <select id="batteryType" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -124,53 +130,42 @@
                                     </optgroup>
                                 </select>
                             </div>
-                            <button id="addBatteryBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800">Add</button>
+                            <button id="addBatteryBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">Add</button>
                         </div>
-                        <div id="batteryList" class="mt-2 space-y-2"></div>
+                        <div id="batteryList" class="mt-2 space-y-2">
+                            <!-- Battery items will be dynamically inserted here -->
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Total Capacity</label>
                             <p id="totalBatteryCapacity" class="text-lg font-bold text-gray-800 dark:text-gray-100">0 Ah</p>
                         </div>
                     </div>
 
-                    <!-- Solar Array Section -->
-                    <div class="space-y-4">
-                         <h3 class="text-xl font-bold text-yellow-500 dark:text-yellow-400 border-b border-gray-200 dark:border-gray-700 pb-2">Solar Array</h3>
+                    <div class="space-y-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                         <h3 class="text-lg font-semibold text-yellow-500 dark:text-yellow-400">Solar Array</h3>
                          <div class="flex gap-2 items-end">
                             <div class="flex-grow">
                                 <label for="newSolarPanelWattage" class="block text-sm font-medium">Add Panel (W)</label>
-                                <select id="newSolarPanelWattage" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                    <optgroup label="Most Common Panels">
-                                        <option value="150">150W</option>
-                                        <option value="160">160W</option>
-                                        <option value="180">180W</option>
-                                        <option value="200" selected>200W</option>
-                                    </optgroup>
-                                    <optgroup label="Other Sizes">
-                                        <option value="100">100W</option>
-                                        <option value="120">120W</option>
-                                        <option value="250">250W</option>
-                                        <option value="300">300W</option>
-                                    </optgroup>
-                                </select>
+                                <input type="number" id="newSolarPanelWattage" value="200" step="50" class="mt-1 block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             </div>
-                            <button id="addSolarPanelBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800">Add</button>
+                            <button id="addSolarPanelBtn" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 dark:focus:ring-offset-gray-800">Add</button>
                         </div>
-                        <div id="solarPanelList" class="mt-2 space-y-2"></div>
+                        <div id="solarPanelList" class="mt-2 space-y-2">
+                            <!-- Solar panel items will be dynamically inserted here -->
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Total Wattage</label>
                             <p id="totalSolarWattage" class="text-lg font-bold text-gray-800 dark:text-gray-100">0 W</p>
                         </div>
                     </div>
 
-                    <!-- Location & Date Section -->
-                    <div class="space-y-4">
-                        <h3 class="text-xl font-bold text-green-500 dark:text-green-400 border-b border-gray-200 dark:border-gray-700 pb-2">Location & Date</h3>
+                    <div class="space-y-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-green-500 dark:text-green-400">Location & Date</h3>
                         <div>
                             <label for="locationSearch" class="block text-sm font-medium">Location</label>
                             <div class="mt-1 flex gap-2">
                                 <input type="text" id="locationSearch" placeholder="e.g., Moab, UT" class="block w-full bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                <button id="searchLocationBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800">Search</button>
+                                <button id="searchLocationBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">Search</button>
                                 <button id="myLocationBtn" title="Use my current location" class="p-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
                                 </button>
@@ -236,17 +231,17 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div id="dailyDrawCard" class="bg-gray-100 dark:bg-gray-700/50 p-4 rounded-lg text-center">
-                            <h3 id="daily-draw-label" class="text-sm font-medium text-gray-600 dark:text-gray-300">Daily Power Draw</h3>
-                            <p id="dailyDraw" class="text-2xl font-bold text-red-500">-</p>
+                        <div id="dailyDrawCard" class="bg-red-100 dark:bg-red-900/50 p-4 rounded-lg text-center">
+                            <h3 id="daily-draw-label" class="text-sm font-medium text-red-800 dark:text-red-300">Daily Power Draw</h3>
+                            <p id="dailyDraw" class="text-2xl font-bold text-red-900 dark:text-red-200">-</p>
                         </div>
-                        <div class="bg-gray-100 dark:bg-gray-700/50 p-4 rounded-lg text-center">
-                            <h3 id="solar-gen-label" class="text-sm font-medium text-gray-600 dark:text-gray-300">Est. Solar Generation</h3>
-                            <p id="solarGeneration" class="text-2xl font-bold text-yellow-500">-</p>
+                        <div class="bg-yellow-100 dark:bg-yellow-900/50 p-4 rounded-lg text-center">
+                            <h3 id="solar-gen-label" class="text-sm font-medium text-yellow-800 dark:text-yellow-300">Est. Solar Generation</h3>
+                            <p id="solarGeneration" class="text-2xl font-bold text-yellow-900 dark:text-yellow-200">-</p>
                         </div>
-                        <div class="bg-gray-100 dark:bg-gray-700/50 p-4 rounded-lg text-center">
-                            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-300">Estimated Runtime</h3>
-                            <p id="estimatedRuntime" class="text-2xl font-bold text-green-500">-</p>
+                        <div class="bg-green-100 dark:bg-green-900/50 p-4 rounded-lg text-center">
+                            <h3 class="text-sm font-medium text-green-800 dark:text-green-300">Estimated Runtime</h3>
+                            <p id="estimatedRuntime" class="text-2xl font-bold text-green-900 dark:text-green-200">-</p>
                         </div>
                     </div>
                      <!-- Restored Daylight Pane -->
@@ -466,9 +461,7 @@
                 date: elements.forecastDate.value,
                 unit: currentUnit, 
                 phantomLoad: phantomLoadActive,
-                appliances: Array.from(elements.applianceList.children)
-                  .filter(el => el.classList.contains('appliance-item'))
-                  .map(el => ({
+                appliances: Array.from(elements.applianceList.children).map(el => ({
                     name: el.dataset.name,
                     watts: el.querySelector('.appliance-watts').value,
                     hours: el.querySelector('.appliance-hours').value
@@ -544,12 +537,8 @@
         }
         
         function populateApplianceDropdown() {
-            const mostCommon = ['Compressor Fridge/Freezer', 'LED Lighting (Internal)', 'Water Pump', 'Roof Vent Fan (e.g., Maxxfan)', 'Phone/Tablet Charging (USB)', 'Diesel/Gas Heater Fan'];
-            const electronics = ['12V Television', 'Laptop Charging', 'Starlink (Standard)', 'Starlink Mini', 'Stereo/Radio', 'Cel-Fi Go Booster'];
-            const kitchenHigh = ['Microwave Oven', 'Coffee Machine (Pod)', 'Electric Kettle (240V)', 'Induction Cooktop (Single)', 'Air Fryer', 'Toaster', 'Thermomix/Blender (Peak)', '12V Travel Oven'];
-            const comfort = ['Air Conditioner', 'Electric Blanket (12V)', 'Hair Dryer', 'CPAP Machine'];
-            const utility = ['Washing Machine (Compact)', 'Air Compressor (Tyres)', 'Vacuum Cleaner (Charging)', 'Power Tool Battery Charger', 'Electric Awning Motor'];
-            const safety = ['BMS & Monitors', 'Gas Detector / Smoke Alarm'];
+            const mostCommon = ['Compressor Fridge/Freezer', 'Water Pump', 'LED Lighting (Internal)', 'Phone/Tablet Charging (USB)', '12V Television', 'Roof Vent Fan (e.g., Maxxfan)', 'Rangehood/Extractor Fan', 'Diesel/Gas Heater Fan', 'Stereo/Radio', 'Laptop Charging', 'Starlink (Standard)', 'Starlink Mini', 'BMS & Monitors', 'Gas Detector / Smoke Alarm', 'Cel-Fi Go Booster'];
+            const highDemand = Object.keys(APPLIANCE_PRESETS).filter(k => !mostCommon.includes(k));
 
             const createOptGroup = (label, items) => {
                 const group = document.createElement('optgroup');
@@ -562,18 +551,14 @@
                 });
                 return group;
             };
-
-            elements.applianceSelector.innerHTML = '';
-            elements.applianceSelector.appendChild(createOptGroup('Most Common', mostCommon));
-            elements.applianceSelector.appendChild(createOptGroup('Electronics & Entertainment', electronics));
-            elements.applianceSelector.appendChild(createOptGroup('High-Power Kitchen', kitchenHigh));
-            elements.applianceSelector.appendChild(createOptGroup('Comfort & Climate', comfort));
-            elements.applianceSelector.appendChild(createOptGroup('Utility & Tools', utility));
-            elements.applianceSelector.appendChild(createOptGroup('Safety & Monitoring', safety));
+            
+            elements.applianceSelector.appendChild(createOptGroup('Most Common Appliances', mostCommon));
+            elements.applianceSelector.appendChild(createOptGroup('High-Demand & Other', highDemand));
         }
 
         // --- EVENT LISTENERS ---
         function setupEventListeners() {
+            // FIX: Added forecastDate to the event listeners
             const simulationInputs = [elements.batteryType, elements.forecastDate];
             simulationInputs.forEach(el => el.addEventListener('change', updateAndRunSimulation));
 
@@ -615,12 +600,6 @@
             
             elements.applianceList.addEventListener('change', (e) => {
                 if (e.target.matches('.appliance-watts, .appliance-hours')) {
-                    if (e.target.hasAttribute('data-dynamic-hours')) {
-                        e.target.removeAttribute('data-dynamic-hours');
-                        e.target.removeAttribute('readonly');
-                        e.target.classList.remove('bg-gray-200', 'dark:bg-gray-800', 'cursor-not-allowed');
-                        e.target.classList.add('bg-white', 'dark:bg-gray-600');
-                    }
                     updateAndRunSimulation();
                 }
             });
@@ -672,8 +651,10 @@
                 </button>
             `;
             elements.batteryList.appendChild(div);
-            updateTotalBatteryCapacity();
-            if(runSim) updateAndRunSimulation();
+            if (runSim) {
+                updateTotalBatteryCapacity();
+                updateAndRunSimulation();
+            }
         }
 
         function updateTotalBatteryCapacity() {
@@ -692,8 +673,10 @@
                 </button>
             `;
             elements.solarPanelList.appendChild(div);
-            updateTotalSolarWattage();
-            if(runSim) updateAndRunSimulation();
+            if (runSim) {
+                updateTotalSolarWattage();
+                updateAndRunSimulation();
+            }
         }
 
         function updateTotalSolarWattage() {
@@ -768,24 +751,23 @@
             const preset = APPLIANCE_PRESETS[name];
             if (!preset) return;
 
-            const isDynamic = ['Compressor Fridge/Freezer', 'Air Conditioner', 'Roof Vent Fan (e.g., Maxxfan)'].includes(name);
-            const dynamicType = isDynamic ? name.replace(/\s+/g, '-').toLowerCase() : '';
-
+            const isFridge = name === 'Compressor Fridge/Freezer';
+            
             let defaultHours = name.toLowerCase().includes('microwave') ? 0.1 : 1.0;
-            const finalHours = isDynamic ? 0 : (hours !== null ? hours : defaultHours);
+            const finalHours = isFridge ? 0 : (hours !== null ? hours : defaultHours);
             const finalWatts = (watts !== null) ? watts : preset.watts;
 
-            const readonlyAttribute = isDynamic ? 'readonly' : '';
-            const dynamicAttribute = isDynamic ? `data-dynamic-hours="${dynamicType}"` : '';
-            const titleAttribute = isDynamic ? 'title="Runtime is automatically calculated based on the ambient temperature forecast. Click to override."' : '';
-            const dynamicStyling = isDynamic ? 'bg-gray-200 dark:bg-gray-800 cursor-not-allowed' : 'bg-white dark:bg-gray-600';
+            const readonlyAttribute = isFridge ? 'readonly' : '';
+            const dynamicAttribute = isFridge ? 'data-dynamic-hours="fridge"' : '';
+            const titleAttribute = isFridge ? 'title="Runtime is automatically calculated based on the ambient temperature forecast."' : '';
+            const fridgeStyling = isFridge ? 'bg-gray-200 dark:bg-gray-800 cursor-not-allowed' : 'bg-white dark:bg-gray-600';
 
             const div = document.createElement('div');
             div.className = 'appliance-item grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-md';
             div.innerHTML = `
                 <span class="font-medium truncate" title="${name}">${name}</span>
                 <input type="number" value="${finalWatts}" class="appliance-watts w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 bg-white dark:bg-gray-600">
-                <input type="number" step="0.25" value="${parseFloat(finalHours).toFixed(2)}" class="appliance-hours w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 ${dynamicStyling}" min="0" max="24" ${dynamicAttribute} ${readonlyAttribute} ${titleAttribute}>
+                <input type="number" step="0.25" value="${parseFloat(finalHours).toFixed(2)}" class="appliance-hours w-20 text-center border-gray-300 dark:border-gray-500 rounded-md shadow-sm p-1 ${fridgeStyling}" min="0" max="24" ${dynamicAttribute} ${readonlyAttribute} ${titleAttribute}>
                 <button title="Delete" class="delete-appliance p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -800,16 +782,16 @@
 
             if (presetName === 'common') {
                 presetAppliances = [
-                    { name: 'Compressor Fridge/Freezer' },
+                    { name: 'Compressor Fridge/Freezer', hours: 8 },
                     { name: 'LED Lighting (Internal)', hours: 4 },
                     { name: 'Water Pump', hours: 0.25 },
-                    { name: 'Roof Vent Fan (e.g., Maxxfan)' },
+                    { name: 'Roof Vent Fan (e.g., Maxxfan)', hours: 8 },
                     { name: 'Phone/Tablet Charging (USB)', hours: 2 },
                     { name: 'Diesel/Gas Heater Fan', hours: 6 }
                 ];
             } else if (presetName === 'dream') {
                 presetAppliances = [
-                    { name: 'Compressor Fridge/Freezer' },
+                    { name: 'Compressor Fridge/Freezer', hours: 8 },
                     { name: 'Starlink (Standard)', hours: 16 },
                     { name: '12V Television', hours: 3 },
                     { name: 'LED Lighting (Internal)', hours: 5 },
@@ -817,16 +799,13 @@
                     { name: 'Microwave Oven', hours: 0.25 },
                     { name: 'Laptop Charging', hours: 4 },
                     { name: 'Water Pump', hours: 0.5 },
-                    { name: 'Roof Vent Fan (e.g., Maxxfan)' },
-                    { name: 'Diesel/Gas Heater Fan', hours: 6 },
-                    { name: 'Stereo/Radio', hours: 3 },
-                    { name: 'Awning/Exterior LED Lights', hours: 2 }
+                    { name: 'Roof Vent Fan (e.g., Maxxfan)', hours: 10 }
                 ];
             } else if (presetName === 'extreme') {
                  presetAppliances = [
-                    { name: 'Compressor Fridge/Freezer' },
+                    { name: 'Compressor Fridge/Freezer', hours: 8 },
                     { name: 'Starlink (Standard)', hours: 12 },
-                    { name: 'Air Conditioner' },
+                    { name: 'Air Conditioner', hours: 5 },
                     { name: 'Washing Machine (Compact)', hours: 1.5 },
                     { name: 'Induction Cooktop (Single)', hours: 1 },
                     { name: 'Microwave Oven', hours: 0.25 },
@@ -836,7 +815,7 @@
                     { name: 'Laptop Charging', hours: 5 },
                     { name: 'LED Lighting (Internal)', hours: 6 },
                     { name: 'Water Pump', hours: 0.75 },
-                    { name: 'Roof Vent Fan (e.g., Maxxfan)' },
+                    { name: 'Roof Vent Fan (e.g., Maxxfan)', hours: 12 },
                     { name: 'Diesel/Gas Heater Fan', hours: 8 },
                     { name: 'Power Tool Battery Charger', hours: 2 }
                 ];
@@ -869,36 +848,30 @@
                 lon: currentLocation.lon,
              };
 
+            // FIX: Pass the selected date to the weather function
             const weatherData = await getWeatherData(prelimInputs.lat, prelimInputs.lon, prelimInputs.date);
             if (!weatherData || !weatherData.hourly || !weatherData.hourly.time) {
                 elements.resultsSpinner.classList.add('hidden');
                 showModal("Weather Error", "Failed to get valid weather data. The forecast may be inaccurate.");
                 return;
             }
-            
-            if (weatherData.daily && autoRuntimeActive) {
+
+            const fridgeHoursInputs = document.querySelectorAll('.appliance-hours[data-dynamic-hours="fridge"]');
+            if (fridgeHoursInputs.length > 0 && weatherData.daily) {
                 const dateIndex = weatherData.daily.time.findIndex(d => d === prelimInputs.date);
                 if (dateIndex !== -1) {
                     const minTemp = weatherData.daily.temperature_2m_min[dateIndex];
                     const maxTemp = weatherData.daily.temperature_2m_max[dateIndex];
-                    
-                    document.querySelectorAll('.appliance-hours[data-dynamic-hours]').forEach(input => {
-                        const type = input.dataset.dynamicHours;
-                        let estimatedHours = 0;
-                        if(type === 'compressor-fridge/freezer') {
-                            estimatedHours = estimateFridgeRunTime(minTemp, maxTemp);
-                        } else if (type === 'air-conditioner') { 
-                             estimatedHours = estimateAcRunTime(minTemp, maxTemp);
-                        } else if (type === 'roof-vent-fan-(e-g-,-maxxfan)') { 
-                             estimatedHours = estimateFanRunTime(minTemp, maxTemp);
-                        }
-                        input.value = estimatedHours.toFixed(2);
+                    const estimatedFridgeHours = estimateFridgeRunTime(minTemp, maxTemp);
+                    fridgeHoursInputs.forEach(input => {
+                        input.value = estimatedFridgeHours.toFixed(2);
                     });
                 }
             }
             
             const totalBatteryCapacity = Array.from(elements.batteryList.children).reduce((acc, el) => acc + parseFloat(el.dataset.capacity), 0);
             const totalSolarWattage = Array.from(elements.solarPanelList.children).reduce((acc, el) => acc + parseFloat(el.dataset.wattage), 0);
+
 
             const inputs = {
                 batteryCapacityAh: totalBatteryCapacity,
@@ -912,7 +885,7 @@
                     name: el.dataset.name,
                     watts: parseFloat(el.querySelector('.appliance-watts').value),
                     hours: parseFloat(el.querySelector('.appliance-hours').value),
-                    pattern: APPLIANCE_PRESETS[el.dataset.name] ? APPLIANCE_PRESETS[el.dataset.name].pattern : 'broad_day'
+                    pattern: APPLIANCE_PRESETS[el.dataset.name].pattern
                 }))
             };
             
@@ -921,6 +894,7 @@
                 updateSuggestionBox({ type: "warning", messages: ["Please fill in all system setup values to run a simulation."] });
                 return;
             }
+
 
             const sunTimes = calculateSunTimes(new Date(inputs.date + 'T12:00:00'), inputs.lat, inputs.lon);
             const totalBatteryWh = inputs.batteryCapacityAh * inputs.systemVoltage;
@@ -1022,6 +996,7 @@
 
 
         // --- API & CALCULATION HELPERS ---
+        // FIX: Update function to fetch weather for a specific date range
         async function getWeatherData(lat, lon, startDate) {
             const dailyParams = "weather_code,temperature_2m_max,temperature_2m_min";
             const endDate = new Date(startDate);
@@ -1097,7 +1072,7 @@
             // Primary Status Logic
             if (firstEmptyHour !== -1) {
                 primaryType = 'critical';
-                primaryMessage = `Your battery is projected to run out in approximately ${firstEmptyHour} hours. Your current load is unsustainable and requires immediate action.`;
+                primaryMessage = `CRITICAL: Your battery is projected to run out in approximately ${firstEmptyHour} hours. Your current load is unsustainable and requires immediate action.`;
                 const topConsumers = [...inputs.appliances]
                     .sort((a, b) => (b.watts * b.hours) - (a.watts * a.hours))
                     .slice(0, 2)
@@ -1109,15 +1084,9 @@
                 primaryType = 'warning';
                 const deficit = totalDraw - totalSolar;
                 const runtimeHours = (usableBatteryWh / deficit) * 24;
-                const runtimeDays = (runtimeHours / 24);
-                if(runtimeDays > 7) {
-                    primaryType = 'info';
-                    primaryMessage = "SUSTAINABLE: Although there is a daily power deficit, your battery bank is large enough to sustain this load for over a week."
-                } else {
-                     primaryMessage = `WARNING: You have a daily power deficit of ${Math.round(deficit)} Wh. Your system is not sustainable long-term.`;
-                     suggestions.push(`At this rate, your battery reserve will only last about ${runtimeDays.toFixed(1)} days. Reduce your consumption or find an alternative charging source.`);
-                }
-
+                const runtimeDays = (runtimeHours / 24).toFixed(1);
+                primaryMessage = `WARNING: You have a daily power deficit of ${Math.round(deficit)} Wh. Your system is not sustainable long-term.`;
+                suggestions.push(`At this rate, your battery reserve will only last about ${runtimeDays} days. Reduce your consumption or find an alternative charging source.`);
             } else {
                 primaryType = 'info';
                 const surplus = totalSolar - totalDraw;
@@ -1188,26 +1157,22 @@
             
             if (firstEmptyHour !== -1) {
                 elements.estimatedRuntime.textContent = `~${firstEmptyHour} hours`;
-                elements.estimatedRuntime.className = "text-2xl font-bold text-red-500";
+                elements.estimatedRuntime.className = "text-2xl font-bold text-red-900 dark:text-red-200";
             } else if (totalSolar < totalDraw) {
                 const deficit = totalDraw - totalSolar;
                 const runtimeInHours = (usableBatteryWh / deficit) * 24;
-                const runtimeInDays = runtimeInHours / 24;
                 
-                if (runtimeInDays > 7) {
-                    elements.estimatedRuntime.textContent = "Sustainable";
-                    elements.estimatedRuntime.className = "text-2xl font-bold text-green-500";
-                } else if (runtimeInHours > 48) {
+                if (runtimeInHours > 48) {
+                    const runtimeInDays = runtimeInHours / 24;
                     elements.estimatedRuntime.textContent = `~${runtimeInDays.toFixed(1)} days`;
-                    elements.estimatedRuntime.className = "text-2xl font-bold text-yellow-500";
                 } else {
                     elements.estimatedRuntime.textContent = `~${Math.floor(runtimeInHours)} hours`;
-                    elements.estimatedRuntime.className = "text-2xl font-bold text-yellow-500";
                 }
                 
+                elements.estimatedRuntime.className = "text-2xl font-bold text-yellow-600 dark:text-yellow-400";
             } else {
                 elements.estimatedRuntime.textContent = "Sustainable";
-                elements.estimatedRuntime.className = "text-2xl font-bold text-green-500";
+                elements.estimatedRuntime.className = "text-2xl font-bold text-green-900 dark:text-green-200";
             }
 
             const daylightHours = (sunTimes.sunset - sunTimes.sunrise) / 3600000;
@@ -1238,7 +1203,10 @@
             const days = weatherData.daily.time.slice(0, 2);
 
             days.forEach((dateString, index) => {
-                const dayName = index === 0 ? "Today" : "Tomorrow";
+                // FIX: Make the day name dynamic based on the forecast date
+                const date = new Date(dateString + 'T00:00:00'); // Use T00:00:00 to avoid timezone issues
+                const dayName = date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
                 const weatherCode = weatherData.daily.weather_code[index];
                 const weatherInfo = WEATHER_CODES[weatherCode] || { name: 'Unknown', icon: 'cloud' };
                 const tempMax = Math.round(weatherData.daily.temperature_2m_max[index]);
@@ -1383,7 +1351,7 @@
                                 }
                             }
                         },
-                        legend: { labels: { color: color, usePointStyle: true, pointStyle: 'rect' } }
+                        legend: { labels: { color: color } }
                     },
                     interaction: { mode: 'index', intersect: false }
                 }
